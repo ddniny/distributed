@@ -25,7 +25,7 @@ public class TimeStampedMessage extends Message {
 	
 	 public String toString() {
 		 return "[header=" + super.header + ", payload=" + super.payload
-	                + ", sendDuplicate=" + super.sendDuplicate + ", TimeStamp=" + getTimeStamp() + "]";
+	                + ", sendDuplicate=" + super.sendDuplicate + ", TimeStamp=" + getTimeStamp().toString() + "]";
 	}
 
 }

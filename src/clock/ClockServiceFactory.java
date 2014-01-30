@@ -14,7 +14,7 @@ public class ClockServiceFactory {
 	
 	public ClockService getClockService (String serviceID) throws SecurityException, NoSuchMethodException, IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		Class serviceClass = map.get(serviceID);
-		Constructor serviceConstructor = serviceClass.getConstructor(new Class[] { String.class });
+		Constructor serviceConstructor = serviceClass.getConstructor();
 		return (ClockService) serviceConstructor.newInstance(new Object[] { } );
 	}
 }
