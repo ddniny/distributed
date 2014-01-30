@@ -33,8 +33,10 @@ public class MessagePasser {
 	public ArrayList<Rule> sendRules = null;
 	public ArrayList<Rule> rcvRules = null;
 	public Node myself = null;
+	public int nodeNum = 0;   //~~~~~~~~used for construct the clock
 
 	// queue and other data structure useful in communication
+	// TODO replace Message with TimeStamped Message
 	public ConcurrentLinkedQueue<Message> delayInMsgQueue;
 	public ConcurrentLinkedQueue<Message> delayOutMsgQueue;
 	public ConcurrentLinkedQueue<Message> rcvBuffer;
@@ -49,6 +51,9 @@ public class MessagePasser {
 	public String localName = null;
 	
 	private ServerSocket server;
+	
+	//ClockService
+	// TODO public ClockService clock;
 
 
 	/** Constructor of MessagePasser, parse the configuration file
@@ -71,6 +76,7 @@ public class MessagePasser {
 			Map<String,  ArrayList<Map<String, Object>>> map = 
 					(Map<String,  ArrayList<Map<String, Object>>>) yaml.load(input);
 			nodeMap = Config.parseNodeMap(map.get("Configuration"));
+			nodeNum = nodeMap.size(); //~~~~
 			sendRules = Config.parseRules(map.get("SendRules"));
 			rcvRules = Config.parseRules(map.get("ReceiveRules"));
 		} catch (FileNotFoundException e) {
@@ -93,6 +99,11 @@ public class MessagePasser {
 		delayOutMsgQueue = new ConcurrentLinkedQueue<Message>();
 		rcvBuffer = new ConcurrentLinkedQueue<Message>();
 		receiveList = new ArrayList<Message>();
+		
+		// TODO: using objectFactory create a clock
+		// @param: the kind of clock
+		// @param: nodeNum
+		// clock = ClockServiceFactory.getClock();
 	}
 
 	/**
@@ -198,6 +209,10 @@ public class MessagePasser {
 				receiveList.add(rcvBuffer.poll());
 			}
 		}
+		// TODO compare and increament timeStamp
+//		for (TimeStampedMessage msg : receiveList) {
+//			msg.getTimeStamp().
+//		}
 		if (receiveList.isEmpty()) return null;
 		return receiveList.remove(0);
 	}

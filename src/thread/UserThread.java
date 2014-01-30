@@ -43,6 +43,10 @@ public class UserThread extends Thread {
 
                     // create and send message
                     Message msg = new Message(dest, kind, data);
+                    
+                    //TODO passer.clock.increment(); //add the number of event
+                    //TODO Message tsMsg = new TimeStampedMessage(dest, kind, data, passer.clock.getTimeStamp());
+                    //tsMsg.set_source(passer.myself.getName());
                     msg.set_source(passer.myself.getName());
                     passer.send(msg);
                 } else if (cmdInput.equals("2")) {
