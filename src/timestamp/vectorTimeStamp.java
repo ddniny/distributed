@@ -1,15 +1,15 @@
 package timestamp;
 
 
-public class vectorTimeStamp implements TimeStamp, Comparable<vectorTimeStamp>{
+public class VectorTimeStamp implements TimeStamp, Comparable<VectorTimeStamp>{
 	private int[] vectorTS;
 	
-	public vectorTimeStamp(int processNo) {
+	public VectorTimeStamp(int processNo) {
 		vectorTS = new int[processNo];
 	}
 
 	@Override
-	public int compareTo(vectorTimeStamp v) {
+	public int compareTo(VectorTimeStamp v) {
 		// TODO Auto-generated method stub
 		boolean hasLarger = false;
 		boolean hasSmaller = false;

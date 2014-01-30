@@ -1,15 +1,15 @@
 package timestamp;
 
-public class logicalTimeStamp implements TimeStamp, Comparable<logicalTimeStamp> {
+public class LogicalTimeStamp implements TimeStamp, Comparable<LogicalTimeStamp> {
 	
 	private int logicalTS;
 	
-	public logicalTimeStamp() {
+	public LogicalTimeStamp() {
 		this.logicalTS = 0;
 	}
 
 	@Override
-	public int compareTo(logicalTimeStamp l) {
+	public int compareTo(LogicalTimeStamp l) {
 		// TODO Auto-generated method stub
 		return this.logicalTS - (Integer)l.getTimeStamp();
 	}
