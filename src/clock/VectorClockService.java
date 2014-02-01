@@ -4,11 +4,15 @@ import timestamp.TimeStamp;
 import timestamp.VectorTimeStamp;
 
 public class VectorClockService extends ClockService {
-	private int processIndex;
+	
+	public void initialize (int Index, int processNo) {
+		currentTimeStamp = new VectorTimeStamp(processNo);
+		processIndex = Index;
+	}
 	
 	public void updateTimeStamp () {
 		int[] nextTimeStamp = (int[]) currentTimeStamp.getTimeStamp();
-		nextTimeStamp[processIndex]++;
+		nextTimeStamp[getProcessIndex()]++;
 		currentTimeStamp.setTimeStamp(nextTimeStamp);
 	}
 	
@@ -18,7 +22,7 @@ public class VectorClockService extends ClockService {
 		for (int i = 0; i < receivedTSVector.length; i++) {
 			currentTSVector[i] = Math.max(currentTSVector[i], receivedTSVector[i]);
 		}
-		currentTSVector[processIndex]++;
+		currentTSVector[getProcessIndex()]++;
 		currentTimeStamp.setTimeStamp(currentTSVector);
 	}
 	
@@ -26,7 +30,7 @@ public class VectorClockService extends ClockService {
 		return processIndex;
 	}
 	
-	public void setProcessIndex (int index) {
-		processIndex = index;
-	}
+//	public void setProcessIndex (int index) {
+//		processIndex = index;
+//	}
 }

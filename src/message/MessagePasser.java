@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -16,6 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.yaml.snakeyaml.Yaml;
 
+import clock.ClockService;
+import clock.ClockServiceFactory;
+import clock.LogicalClockService;
+import clock.VectorClockService;
 import record.Node;
 import record.Rule;
 import record.Rule.ACTION;
@@ -23,9 +28,18 @@ import thread.ListenerThread;
 import thread.UserThread;
 import util.Config;
 
+enum ProcessNo{
+	LOGGER(0),ALICE(1),BOB(2),CHARLIE(3),DAPHNIE(4);
+	public int value;
+	private ProcessNo(int value){
+		this.value = value;
+	}
+}
+
 public class MessagePasser {
 	// instance to call by other classes
 	private static volatile MessagePasser instance = null;
+	private static String CLOCKTYPE = "VectorClock";
 
 	// node and rules
 	public HashMap<String, Node> nodeMap = null;
@@ -34,13 +48,20 @@ public class MessagePasser {
 	public ArrayList<Rule> rcvRules = null;
 	public Node myself = null;
 	public int nodeNum = 0;   //~~~~~~~~used for construct the clock
+	public int processIndex = 0;
 
 	// queue and other data structure useful in communication
 	// TODO replace Message with TimeStamped Message
-	public ConcurrentLinkedQueue<Message> delayInMsgQueue;
-	public ConcurrentLinkedQueue<Message> delayOutMsgQueue;
-	public ConcurrentLinkedQueue<Message> rcvBuffer;
-	public ArrayList<Message> receiveList;
+//	public ConcurrentLinkedQueue<Message> delayInMsgQueue;
+//	public ConcurrentLinkedQueue<Message> delayOutMsgQueue;
+//	public ConcurrentLinkedQueue<Message> rcvBuffer;
+//	public ArrayList<Message> receiveList;
+	
+	public ConcurrentLinkedQueue<TimeStampedMessage> delayInMsgQueue;
+	public ConcurrentLinkedQueue<TimeStampedMessage> delayOutMsgQueue;
+	public ConcurrentLinkedQueue<TimeStampedMessage> rcvBuffer;
+	public ArrayList<TimeStampedMessage> receiveList;
+	
 
 	// set up an atomic counter for message id
 	private AtomicInteger IDcounter;
@@ -53,7 +74,9 @@ public class MessagePasser {
 	private ServerSocket server;
 	
 	//ClockService
-	// TODO public ClockService clock;
+	// TODO 
+	public ClockServiceFactory csFactory;
+	public ClockService clock;
 
 
 	/** Constructor of MessagePasser, parse the configuration file
@@ -61,9 +84,15 @@ public class MessagePasser {
 	 * 
 	 * @param configuration_filename
 	 * @param local_name
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws NoSuchMethodException 
+	 * @throws IllegalArgumentException 
+	 * @throws SecurityException 
 	 */
 	@SuppressWarnings("unchecked")
-	private MessagePasser(String configuration_filename, String local_name) {
+	private MessagePasser(String configuration_filename, String local_name) throws SecurityException, IllegalArgumentException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		// parse the configuration file
 		Yaml yaml = new Yaml();
 		InputStream input = null;
@@ -91,19 +120,29 @@ public class MessagePasser {
 			e.printStackTrace();
 		}
 		this.myself = nodeMap.get(local_name);
+		setProcessIndex(local_name);
 		IDcounter = new AtomicInteger(0);
 
 		// initiate data structures
 		outputStreamMap = new HashMap<String, ObjectOutputStream>();
-		delayInMsgQueue = new ConcurrentLinkedQueue<Message>();
-		delayOutMsgQueue = new ConcurrentLinkedQueue<Message>();
-		rcvBuffer = new ConcurrentLinkedQueue<Message>();
-		receiveList = new ArrayList<Message>();
+//		delayInMsgQueue = new ConcurrentLinkedQueue<Message>();
+//		delayOutMsgQueue = new ConcurrentLinkedQueue<Message>();
+//		rcvBuffer = new ConcurrentLinkedQueue<Message>();
+//		receiveList = new ArrayList<Message>();
+		delayInMsgQueue = new ConcurrentLinkedQueue<TimeStampedMessage>();
+		delayOutMsgQueue = new ConcurrentLinkedQueue<TimeStampedMessage>();
+		rcvBuffer = new ConcurrentLinkedQueue<TimeStampedMessage>();
+		receiveList = new ArrayList<TimeStampedMessage>();
+		csFactory = new ClockServiceFactory();
 		
 		// TODO: using objectFactory create a clock
 		// @param: the kind of clock
 		// @param: nodeNum
-		// clock = ClockServiceFactory.getClock();
+		csFactory.registerClockService("LogicalClock", LogicalClockService.class);
+		csFactory.registerClockService("VectorClock", VectorClockService.class);
+		clock = csFactory.getClockService(CLOCKTYPE);
+		clock.initialize(processIndex, nodeNum);
+		
 	}
 
 	/**
@@ -119,7 +158,7 @@ public class MessagePasser {
 	 * @param message
 	 * @throws IOException 
 	 */
-	public void send(Message message) throws IOException {
+	public void send(TimeStampedMessage message) throws IOException {
 		message.set_seqNum(IDcounter.incrementAndGet());
 		boolean duplicate = false;
 		switch (matchSendRule(message)) {
@@ -153,8 +192,7 @@ public class MessagePasser {
 	 * Send away message to specific destination
 	 * @param message
 	 */
-	@SuppressWarnings("resource")
-	private void sendAway(Message message) {
+	private void sendAway(TimeStampedMessage message) {
 		ObjectOutputStream out;
 
 		try {
@@ -209,11 +247,15 @@ public class MessagePasser {
 				receiveList.add(rcvBuffer.poll());
 			}
 		}
-		// TODO compare and increament timeStamp
-//		for (TimeStampedMessage msg : receiveList) {
-//			msg.getTimeStamp().
-//		}
-		if (receiveList.isEmpty()) return null;
+		
+		if (receiveList.isEmpty()) {
+			clock.updateTimeStamp();
+			return null;
+		}
+		
+		// TODO compare and increment timeStamp
+		clock.updateTimeStamp(receiveList.get(0).getTimeStamp());
+		
 		return receiveList.remove(0);
 	}
 
@@ -276,12 +318,46 @@ public class MessagePasser {
 		}
 	}
 
+	public void setProcessIndex (String local_name) {
+		if (local_name.equalsIgnoreCase("logger")) {
+			processIndex = 0;
+		}else if (local_name.equalsIgnoreCase("alice")) {
+			processIndex = 1;
+		}else if (local_name.equalsIgnoreCase("bob")) {
+			processIndex = 2;
+		}else if (local_name.equalsIgnoreCase("charlie")) {
+			processIndex = 3;
+		}else if (local_name.equalsIgnoreCase("daphnie")) {
+			processIndex = 4;
+		}else throw new RuntimeException("No such user.");
+	}
+	
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
 			System.out.println("Usage: configuration_filename local_name");
 			System.exit(0);
 		}    
-		instance = new MessagePasser(args[0], args[1]);
+		try {
+			instance = new MessagePasser(args[0], args[1]);
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		instance.server = new ServerSocket(instance.myself.getPort());
 		// set up listener thread to build connection with other nodes
 		new ListenerThread(instance.server).start();

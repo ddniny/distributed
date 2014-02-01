@@ -4,6 +4,13 @@ import timestamp.LogicalTimeStamp;
 import timestamp.TimeStamp;
 
 public class LogicalClockService extends ClockService {
+	
+	
+	public void initialize(int Index, int processNo) {
+		currentTimeStamp = new LogicalTimeStamp();
+		processIndex = Index; 
+	}
+	
 	public void updateTimeStamp () {
 		currentTimeStamp.setTimeStamp((Integer)currentTimeStamp.getTimeStamp() + 1);
 	}

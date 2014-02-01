@@ -1,7 +1,13 @@
 package timestamp;
 
-public class LogicalTimeStamp implements TimeStamp, Comparable<LogicalTimeStamp> {
+import java.io.Serializable;
+
+public class LogicalTimeStamp implements TimeStamp, Comparable<LogicalTimeStamp>, Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int logicalTS;
 	
 	public LogicalTimeStamp() {

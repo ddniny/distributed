@@ -4,10 +4,13 @@ import timestamp.TimeStamp;
 
 public abstract class ClockService {
 	TimeStamp currentTimeStamp;
+	int processIndex;
 	
 	public TimeStamp getcurrentTimeStamp () {
 		return currentTimeStamp;
 	}
+	
+	public abstract void initialize (int processIndex, int processNo);
 	
 	/**
 	 * increment currentTimeStamp by 1 between any two successive events 
@@ -22,4 +25,12 @@ public abstract class ClockService {
 	 * @param ts
 	 */
 	public abstract void updateTimeStamp (TimeStamp ts);
+
+	public int getProcessIndex() {
+		return processIndex;
+	}
+
+	public void setProcessIndex(int processIndex) {
+		this.processIndex = processIndex;
+	}
 }

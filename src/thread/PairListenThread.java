@@ -6,6 +6,7 @@ import java.net.Socket;
 
 import message.Message;
 import message.MessagePasser;
+import message.TimeStampedMessage;
 import record.Rule;
 import record.Rule.ACTION;
 
@@ -27,7 +28,7 @@ public class PairListenThread extends Thread {
         try {
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
             while(true) {
-                Message message = (Message)in.readObject();
+                TimeStampedMessage message = (TimeStampedMessage)in.readObject();
                 switch (matchReceiveRule(message, passer)) {
                 case DROP:
                     System.out.println("INFO: Drop Message (Receive) " + message);
@@ -64,7 +65,7 @@ public class PairListenThread extends Thread {
      * @param message
      * @param passer
      */
-    private void receiveIn(Message message, MessagePasser passer) {
+    private void receiveIn(TimeStampedMessage message, MessagePasser passer) {
         passer.rcvBuffer.offer(message);
     }
 

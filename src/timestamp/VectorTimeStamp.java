@@ -1,7 +1,14 @@
 package timestamp;
 
+import java.io.Serializable;
+import java.util.Arrays;
 
-public class VectorTimeStamp implements TimeStamp, Comparable<VectorTimeStamp>{
+
+public class VectorTimeStamp implements TimeStamp, Comparable<VectorTimeStamp>, Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int[] vectorTS;
 	
 	public VectorTimeStamp(int processNo) {
@@ -32,6 +39,10 @@ public class VectorTimeStamp implements TimeStamp, Comparable<VectorTimeStamp>{
 	public Object getTimeStamp() {
 		// TODO Auto-generated method stub
 		return vectorTS;
+	}
+	
+	public String toString() {
+		return Arrays.toString(vectorTS);
 	}
 
 }
