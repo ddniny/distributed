@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 
-public class VectorTimeStamp implements TimeStamp, Comparable<VectorTimeStamp>, Serializable{
+public class VectorTimeStamp extends TimeStamp implements Serializable {
 	/**
 	 * 
 	 */
@@ -16,7 +16,7 @@ public class VectorTimeStamp implements TimeStamp, Comparable<VectorTimeStamp>, 
 	}
 
 	@Override
-	public int compareTo(VectorTimeStamp v) {
+	public int compareTo(TimeStamp v) {
 		// TODO Auto-generated method stub
 		boolean hasLarger = false;
 		boolean hasSmaller = false;
@@ -25,7 +25,7 @@ public class VectorTimeStamp implements TimeStamp, Comparable<VectorTimeStamp>, 
 			else if (vectorTS[i] > ((int[])v.getTimeStamp())[i]) hasLarger = true;
 		}
 		if (hasSmaller && !hasLarger) return -1;
-		else if (hasSmaller && hasLarger) return 0;
+		else if (hasSmaller == hasLarger) return 0;
 		else return 1;
 	}
 

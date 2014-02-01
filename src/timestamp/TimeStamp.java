@@ -1,7 +1,7 @@
 package timestamp;
 
-public interface TimeStamp {
+public abstract class TimeStamp implements Comparable<TimeStamp> {
 	
-	void setTimeStamp(Object o);
-	Object getTimeStamp();
+	public abstract void setTimeStamp(Object o);
+	public abstract Object getTimeStamp();
 }

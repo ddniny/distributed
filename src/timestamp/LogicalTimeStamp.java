@@ -2,7 +2,7 @@ package timestamp;
 
 import java.io.Serializable;
 
-public class LogicalTimeStamp implements TimeStamp, Comparable<LogicalTimeStamp>, Serializable {
+public class LogicalTimeStamp extends TimeStamp implements Serializable {
 	
 	/**
 	 * 
@@ -15,7 +15,7 @@ public class LogicalTimeStamp implements TimeStamp, Comparable<LogicalTimeStamp>
 	}
 
 	@Override
-	public int compareTo(LogicalTimeStamp l) {
+	public int compareTo(TimeStamp l) {
 		// TODO Auto-generated method stub
 		return this.logicalTS - (Integer)l.getTimeStamp();
 	}

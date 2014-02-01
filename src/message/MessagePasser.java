@@ -172,17 +172,21 @@ public class MessagePasser {
 			// no break, because at least one message should be sent
 			duplicate = true;
 		default:
-			sendAway(message);    
+			sendAway(message);  
+			sendAwayToLogger(message);
 			// send delayed message
 			synchronized(delayOutMsgQueue) {
 				while (!delayOutMsgQueue.isEmpty()) {
-					sendAway(delayOutMsgQueue.poll());
+					TimeStampedMessage msg = delayOutMsgQueue.poll();
+					sendAway(msg);
+					sendAwayToLogger(msg);
 				}
 			}
 			// send duplicated message if needed
 			if (duplicate) {
 				message.set_sendDuplicate(true);
 				sendAway(message);
+				sendAwayToLogger(message);
 			}
 		}
 	}
@@ -206,6 +210,38 @@ public class MessagePasser {
 
 			} else {
 				out = outputStreamMap.get(message.getDest());
+			}
+
+			// send message
+			out.writeObject(message);
+			out.flush();
+			out.reset();
+			System.out.println("INFO: send message " + message);
+
+		} catch (IOException e) {
+			System.err.println("ERROR: send message error, the other side may be offline " + message);
+		}
+	}
+	
+	
+	/**
+	 * Send away message to logger
+	 * @param message
+	 */
+	private void sendAwayToLogger(TimeStampedMessage message) {
+		ObjectOutputStream out;
+
+		try {
+			// build connection if not
+			if (!outputStreamMap.containsKey("logger")) {
+				Node node = nodeMap.get("logger");
+
+				Socket socket = new Socket(node.getIpAddress(), node.getPort());
+				out = new ObjectOutputStream(socket.getOutputStream());
+				outputStreamMap.put("logger", out);
+
+			} else {
+				out = outputStreamMap.get("logger");
 			}
 
 			// send message

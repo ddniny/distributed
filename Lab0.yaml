@@ -8,7 +8,7 @@
 Configuration :
   - Name : logger 
     IP   : localhost
-    Port : 66666
+    Port : 6666
 
   - Name : alice 
     IP   : localhost
