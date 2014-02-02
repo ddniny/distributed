@@ -168,7 +168,6 @@ public class MessagePasser {
 			delayOutMsgQueue.add(message);
 			break;
 		case DUPLICATE:
-			sendAwayToLogger(message, "Sender Duplicate");
 			// no break, because at least one message should be sent
 			duplicate = true;
 		default:
@@ -185,6 +184,8 @@ public class MessagePasser {
 			if (duplicate) {
 				message.set_sendDuplicate(true);
 				sendAway(message);
+				currentToLogger = true;
+				sendAwayToLogger(message, "Sender Duplicate");
 			}
 		}
 	}
