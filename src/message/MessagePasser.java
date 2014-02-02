@@ -28,13 +28,6 @@ import thread.ListenerThread;
 import thread.UserThread;
 import util.Config;
 
-enum ProcessNo{
-	LOGGER(0),ALICE(1),BOB(2),CHARLIE(3),DAPHNIE(4);
-	public int value;
-	private ProcessNo(int value){
-		this.value = value;
-	}
-}
 
 public class MessagePasser {
 	// instance to call by other classes
@@ -74,9 +67,11 @@ public class MessagePasser {
 	private ServerSocket server;
 	
 	//ClockService
-	// TODO 
 	public ClockServiceFactory csFactory;
 	public ClockService clock;
+	
+	//logger
+	public boolean currentToLogger = false;
 
 
 	/** Constructor of MessagePasser, parse the configuration file
@@ -159,34 +154,37 @@ public class MessagePasser {
 	 * @throws IOException 
 	 */
 	public void send(TimeStampedMessage message) throws IOException {
+		clock.updateTimeStamp();
+		message.setTimeStamp(clock.getcurrentTimeStamp());
 		message.set_seqNum(IDcounter.incrementAndGet());
 		boolean duplicate = false;
 		switch (matchSendRule(message)) {
 		case DROP:
+			sendAwayToLogger(message, "Sender Drop");
 			System.out.println("INFO: Drop Message (Send) " + message);
 			break;
 		case DELAY:
+			sendAwayToLogger(message, "Sender Delay");
 			delayOutMsgQueue.add(message);
 			break;
 		case DUPLICATE:
+			sendAwayToLogger(message, "Sender Duplicate");
 			// no break, because at least one message should be sent
 			duplicate = true;
 		default:
 			sendAway(message);  
-			sendAwayToLogger(message);
+			sendAwayToLogger(message, "Send");
 			// send delayed message
 			synchronized(delayOutMsgQueue) {
 				while (!delayOutMsgQueue.isEmpty()) {
 					TimeStampedMessage msg = delayOutMsgQueue.poll();
 					sendAway(msg);
-					sendAwayToLogger(msg);
 				}
 			}
 			// send duplicated message if needed
 			if (duplicate) {
 				message.set_sendDuplicate(true);
 				sendAway(message);
-				sendAwayToLogger(message);
 			}
 		}
 	}
@@ -196,7 +194,7 @@ public class MessagePasser {
 	 * Send away message to specific destination
 	 * @param message
 	 */
-	private void sendAway(TimeStampedMessage message) {
+	public void sendAway(TimeStampedMessage message) {
 		ObjectOutputStream out;
 
 		try {
@@ -228,30 +226,12 @@ public class MessagePasser {
 	 * Send away message to logger
 	 * @param message
 	 */
-	private void sendAwayToLogger(TimeStampedMessage message) {
-		ObjectOutputStream out;
-
-		try {
-			// build connection if not
-			if (!outputStreamMap.containsKey("logger")) {
-				Node node = nodeMap.get("logger");
-
-				Socket socket = new Socket(node.getIpAddress(), node.getPort());
-				out = new ObjectOutputStream(socket.getOutputStream());
-				outputStreamMap.put("logger", out);
-
-			} else {
-				out = outputStreamMap.get("logger");
-			}
-
-			// send message
-			out.writeObject(message);
-			out.flush();
-			out.reset();
-			System.out.println("INFO: send message " + message);
-
-		} catch (IOException e) {
-			System.err.println("ERROR: send message error, the other side may be offline " + message);
+	public void sendAwayToLogger(TimeStampedMessage message, String kind) {
+		if (currentToLogger) {
+			TimeStampedMessage logMessage = new TimeStampedMessage("logger", kind, message, clock.getcurrentTimeStamp());
+			logMessage.set_source(myself.getName());
+			sendAway(logMessage);
+			currentToLogger = false;
 		}
 	}
 
@@ -295,6 +275,21 @@ public class MessagePasser {
 		return receiveList.remove(0);
 	}
 
+	public ArrayList<TimeStampedMessage> printLog() {
+		ArrayList<TimeStampedMessage> logList = new ArrayList<TimeStampedMessage>();
+		synchronized (rcvBuffer) {
+			while (!rcvBuffer.isEmpty()) {
+				receiveList.add(rcvBuffer.poll());
+			}
+		}
+		for (int i = 0; i < receiveList.size(); i++){
+			if (receiveList.get(i).getDest().equals("logger")) {
+				logList.add(receiveList.remove(i));
+				i--;
+			}
+		}	
+		return logList;	
+	}
 	/**
 	 * Check if the file is modified
 	 * @throws IOException

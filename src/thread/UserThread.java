@@ -2,6 +2,7 @@ package thread;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 import message.Message;
 import message.MessagePasser;
@@ -14,51 +15,87 @@ import message.TimeStampedMessage;
  */
 public class UserThread extends Thread {
 
-    @Override
-    public void run() {
-        BufferedReader in = null;
-        MessagePasser passer = MessagePasser.getInstance();
-        try {
-            // TODO: you may want add some auto test here, so you can change the userTread's constructor
-            // to get the input file name for each user. And read the file in specific format "Send bob"....
-            
-            
-            while (true) {
-                // wait user input
-                System.out.println("Please enter your scenario \t 1: Send, 2: Receive");
-                in = new BufferedReader(new InputStreamReader(System.in));
-                String cmdInput = in.readLine();
-                // handle with "send"
-                if (cmdInput.equals("1")) {
-                    System.out.println("Please enter your dest:");
-                    String dest = in.readLine();
-                    while (!passer.nodeMap.containsKey(dest)) {
-                        System.out.println("Your Dest has not been registered, enter again:");
-                        dest = in.readLine();
-                    }
-                    
-                    System.out.println("Please enter the kind:");
-                    String kind = in.readLine();
-                    System.out.println("Please enter the data:");
-                    String data = in.readLine();
+	@Override
+	public void run() {
+		BufferedReader in = null;
+		MessagePasser passer = MessagePasser.getInstance();
+		try {
+			// TODO: you may want add some auto test here, so you can change the userTread's constructor
+			// to get the input file name for each user. And read the file in specific format "Send bob"....
 
-                    // create and send message
-                    //Message msg = new Message(dest, kind, data);
-                    
-                    //TODO passer.clock.increment(); //add the number of event
-                    passer.clock.updateTimeStamp();
-                    TimeStampedMessage tsMsg = new TimeStampedMessage(dest, kind, data, passer.clock.getcurrentTimeStamp());
-                    tsMsg.set_source(passer.myself.getName());
-                    passer.send(tsMsg);
-//                    msg.set_source(passer.myself.getName());
-//                    passer.send(msg);
-                } else if (cmdInput.equals("2")) {
-                    System.out.println("Receive Messages : " + passer.receive());
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("ERROR: Reader corrput");
-            e.printStackTrace();
-        }
-    }
+
+			while (true) {
+				// wait user input
+				System.out.println("Please enter your scenario \t 1: Send, 2: Receive, 3: Retrieve");
+				in = new BufferedReader(new InputStreamReader(System.in));
+				String cmdInput = in.readLine();
+				// handle with "send"
+				if (cmdInput.equals("1")) {
+					System.out.println("Please enter your dest:");
+					String dest = in.readLine();
+					while (!passer.nodeMap.containsKey(dest)) {
+						System.out.println("Your Dest has not been registered, enter again:");
+						dest = in.readLine();
+					}
+
+					System.out.println("Please enter the kind:");
+					String kind = in.readLine();
+					System.out.println("Please enter the data:");
+					String data = in.readLine();
+
+					while (true) {
+						System.out.println("Do you want send this message to logger? 1: Yes, 2: No");
+						cmdInput = in.readLine();
+						if (cmdInput.equals("1")) {
+							passer.currentToLogger = true;
+							break;
+						}
+						else if (cmdInput.equals("2")) {
+							passer.currentToLogger = false;
+							break;
+						}
+					}
+					// create and send message
+					//Message msg = new Message(dest, kind, data);
+
+					TimeStampedMessage tsMsg = new TimeStampedMessage(dest, kind, data, passer.clock.getcurrentTimeStamp());
+					tsMsg.set_source(passer.myself.getName());
+					passer.send(tsMsg);
+					//                    msg.set_source(passer.myself.getName());
+					//                    passer.send(msg);
+				} else if (cmdInput.equals("2")) {
+					TimeStampedMessage rcvTSmessageMessage = (TimeStampedMessage) passer.receive();
+					System.out.println("Receive Messages : " + rcvTSmessageMessage);
+					if (rcvTSmessageMessage != null) {
+						while (true) {
+							System.out.println("Do you want send this message to logger? 1: Yes, 2: No");
+							cmdInput = in.readLine();
+							if (cmdInput.equals("1")) {
+								passer.currentToLogger = true;
+								passer.sendAwayToLogger(rcvTSmessageMessage, "Receive send");
+								break;
+							}
+							else if (cmdInput.equals("2")) {
+								passer.currentToLogger = false;
+								break;
+							}
+						}	
+					}
+
+				} else if (cmdInput.equals("3")) {
+					TimeStampedMessage rtvMsg = new TimeStampedMessage("logger", "Retrieve", null, passer.clock.getcurrentTimeStamp());
+					rtvMsg.set_source(passer.myself.getName());
+					passer.sendAway(rtvMsg);
+					UserThread.sleep(3000);
+					ArrayList<TimeStampedMessage> logList = passer.printLog();
+					while (!logList.isEmpty()) {
+						System.out.println(logList.remove(0));
+					}
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("ERROR: Reader corrput");
+			e.printStackTrace();
+		}
+	}
 }
