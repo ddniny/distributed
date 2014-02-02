@@ -84,13 +84,25 @@ public class UserThread extends Thread {
 
 				} else if (cmdInput.equals("3")) {
 					TimeStampedMessage rtvMsg = new TimeStampedMessage("logger", "Retrieve", null, passer.clock.getcurrentTimeStamp());
+					TimeStampedMessage preMessage = null;
+					TimeStampedMessage curMessage = null;
 					rtvMsg.set_source(passer.myself.getName());
 					passer.sendAway(rtvMsg);
 					UserThread.sleep(3000);
 					ArrayList<TimeStampedMessage> logList = passer.printLog();
 					while (!logList.isEmpty()) {
-						System.out.println(logList.remove(0));
+						curMessage = logList.remove(0);
+						if (preMessage != null && preMessage.getTimeStamp().compareTo(curMessage.getTimeStamp()) == 0) {
+							System.out.println(",");
+						} else {
+							if (preMessage != null) {
+								System.out.println("->");
+							}
+						}
+						preMessage = curMessage;
+						System.out.print(curMessage);
 					}
+					System.out.println();
 				}
 			}
 		} catch (Exception e) {

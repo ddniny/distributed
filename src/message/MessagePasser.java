@@ -155,7 +155,7 @@ public class MessagePasser {
 	 */
 	public void send(TimeStampedMessage message) throws IOException {
 		clock.updateTimeStamp();
-		message.setTimeStamp(clock.getcurrentTimeStamp());
+		message.setTimeStamp(clock.getcurrentTimeStamp().getTimeStamp());
 		message.set_seqNum(IDcounter.incrementAndGet());
 		boolean duplicate = false;
 		switch (matchSendRule(message)) {
