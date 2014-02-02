@@ -15,7 +15,7 @@ Configuration :
     Port : 12345        # This is the incoming port on which MP will listen
                         # May be changed for further communication as usual
   - Name : bob 
-    IP   : localhost
+    IP   : 128.237.228.38
     Port : 14255
     
   - Name : charlie
@@ -36,14 +36,10 @@ SendRules :
     Kind   : Lookup
   - Action : duplicate      # 3rd message from alice that anyone 
     Src    : alice        # receives will be duplicated
-    Nth    : 2
-    EveryNth: 2
 
 ReceiveRules :
   - Action : duplicate      # 3rd message from Charlie that anyone 
     Src    : alice        # receives will be duplicated
     Nth    : 5
-  - Action : drop
-    Duplicate: true
   - Action : delay
     Kind   : Ack

@@ -169,6 +169,7 @@ public class MessagePasser {
 			break;
 		case DUPLICATE:
 			sendAwayToLogger(message, "Sender Duplicate");
+			currentToLogger = true;
 			// no break, because at least one message should be sent
 			duplicate = true;
 		default:
