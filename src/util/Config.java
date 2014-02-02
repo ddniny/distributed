@@ -29,6 +29,19 @@ public class Config {
         //System.out.println(userMap);
         return userMap;
     }
+    
+    public static String parseClockType (ArrayList<Map<String, Object>> element) {
+    	String clockType = null;
+    	for (Map<String, Object> yamlClock : element) {
+            try {
+                clockType = yamlClock.get("Type").toString();
+            } catch (Exception e) {
+                System.err.println("ERROR: configuration file error - " + yamlClock);
+                e.printStackTrace();
+            }
+        }
+    	return clockType;
+    }
 
     /**
      * Parse rules from yaml file

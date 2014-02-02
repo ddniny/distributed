@@ -32,7 +32,7 @@ import util.Config;
 public class MessagePasser {
 	// instance to call by other classes
 	private static volatile MessagePasser instance = null;
-	private static String CLOCKTYPE = "VectorClock";
+	private static String CLOCKTYPE = null;
 
 	// node and rules
 	public HashMap<String, Node> nodeMap = null;
@@ -100,9 +100,10 @@ public class MessagePasser {
 			Map<String,  ArrayList<Map<String, Object>>> map = 
 					(Map<String,  ArrayList<Map<String, Object>>>) yaml.load(input);
 			nodeMap = Config.parseNodeMap(map.get("Configuration"));
-			nodeNum = nodeMap.size(); //~~~~
+			nodeNum = nodeMap.size(); 
 			sendRules = Config.parseRules(map.get("SendRules"));
 			rcvRules = Config.parseRules(map.get("ReceiveRules"));
+			CLOCKTYPE = Config.parseClockType(map.get("ClockType"));
 		} catch (FileNotFoundException e) {
 			System.err.println("ERROR: Cannot find the configuration file!");
 			e.printStackTrace();
@@ -154,6 +155,7 @@ public class MessagePasser {
 	 * @throws IOException 
 	 */
 	public void send(TimeStampedMessage message) throws IOException {
+		boolean dupToLog = false;
 		clock.updateTimeStamp();
 		message.setTimeStamp(clock.getcurrentTimeStamp().getTimeStamp());
 		message.set_seqNum(IDcounter.incrementAndGet());
@@ -169,6 +171,7 @@ public class MessagePasser {
 			break;
 		case DUPLICATE:
 			// no break, because at least one message should be sent
+			dupToLog = currentToLogger;
 			duplicate = true;
 		default:
 			sendAway(message);  
@@ -184,8 +187,9 @@ public class MessagePasser {
 			if (duplicate) {
 				message.set_sendDuplicate(true);
 				sendAway(message);
-				currentToLogger = true;
+				currentToLogger = dupToLog;
 				sendAwayToLogger(message, "Sender Duplicate");
+				dupToLog = false;
 			}
 		}
 	}
