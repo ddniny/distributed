@@ -7,11 +7,11 @@
 # The local node's name is included in this list
 Configuration :
   - Name : logger 
-    IP   : localhost
+    IP   : 128.237.213.172
     Port : 6666
 
   - Name : alice 
-    IP   : localhost
+    IP   : 128.237.213.172
     Port : 12345        # This is the incoming port on which MP will listen
                         # May be changed for further communication as usual
   - Name : bob 
