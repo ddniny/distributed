@@ -15,11 +15,11 @@ Configuration :
     Port : 12345        # This is the incoming port on which MP will listen
                         # May be changed for further communication as usual
   - Name : bob 
-    IP   : 128.237.228.38
+    IP   : 128.237.213.172
     Port : 14255
     
   - Name : charlie
-    IP   : localhost
+    IP   : 128.237.228.38
     Port : 12998
     
   - Name : daphnie
