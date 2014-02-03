@@ -1,14 +1,18 @@
 package logger;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,13 +33,20 @@ public class Logger {
 	public String configFileName = null;
 	public String localName = null;
 	public long modified = 0;
+	public static String logPath = "";
 
 	public static Logger getInstance() {
 		return instance;
 	}
 	public static void main (String[] args) {
+		if (args.length != 3) {
+			System.out.println("Usage: configuration_filename local_name path_to_dump_logFile");
+			System.exit(0);
+		} 
+		new LoggerUserThread().start();
 		instance = new Logger();
 		instance.parseTheConfigFile(args[0], args[1]);
+		logPath = args[2];
 		try {
 			ServerSocket server = new ServerSocket(6666);
 			while(true) {
@@ -62,7 +73,38 @@ public class Logger {
 				logRecords.add(i, TSMsg);
 			}
 		}
-		System.out.println(TSMsg);
+		//System.out.println(TSMsg);
+	}
+
+	public void writeLogToFile () {
+		TimeStampedMessage curMessage = null;
+		TimeStampedMessage  preMessage = null;
+		Date date = new Date();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String path = logPath + sdf.format(date) + " log.txt";
+		try {   
+			FileWriter fw=new FileWriter(path,true);   
+			BufferedWriter bw=new BufferedWriter(fw);   
+			for (int i = 0; i < logRecords.size(); i++) {
+				curMessage = logRecords.get(i);
+				if (preMessage != null && preMessage.getTimeStamp().compareTo(curMessage.getTimeStamp()) == 0) {
+					bw.write("||");
+					bw.newLine();
+				} else {
+					if (preMessage != null) {
+						bw.write("->");
+						bw.newLine();
+					}
+				}
+				preMessage = curMessage;
+				bw.write(curMessage.toString());
+			}
+			bw.close();  
+			fw.close();   
+		} catch (IOException e) {   
+			// TODO Auto-generated catch block   
+			e.printStackTrace();   
+		} 
 	}
 
 	@SuppressWarnings("unchecked")
@@ -90,7 +132,7 @@ public class Logger {
 			e.printStackTrace();
 		}
 		this.myself = nodeMap.get(loggerName);
-		
+
 		outputStreamMap = new HashMap<String, ObjectOutputStream>();
 	}
 
@@ -102,7 +144,7 @@ public class Logger {
 		}
 		System.out.println("Finish sending the log to " + sendTo);
 	}
-	
+
 	private void sendAway(TimeStampedMessage message, String sendTo) {
 		ObjectOutputStream out;
 		try {

@@ -31,5 +31,9 @@ public class LogicalTimeStamp extends TimeStamp implements Serializable {
 		// TODO Auto-generated method stub
 		return logicalTS;
 	}
+	
+	public String toString() {
+		return String.valueOf(logicalTS);
+	}
 
 }

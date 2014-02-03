@@ -7,15 +7,19 @@
 # The local node's name is included in this list
 Configuration :
   - Name : logger 
-    IP   : 128.237.213.172
+    IP   : localhost
     Port : 6666
 
   - Name : alice 
-    IP   : 128.237.213.172
+    IP   : localhost
     Port : 12345        # This is the incoming port on which MP will listen
                         # May be changed for further communication as usual
   - Name : bob 
+<<<<<<< HEAD
     IP   : 128.237.213.172
+=======
+    IP   : localhost
+>>>>>>> 5bd414d3fe156ca5456dfdc46cfb84690f0637bf
     Port : 14255
     
   - Name : charlie
@@ -43,3 +47,6 @@ ReceiveRules :
     Nth    : 5
   - Action : delay
     Kind   : Ack
+
+ClockType :
+  - Type  : VectorClock

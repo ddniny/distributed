@@ -93,7 +93,7 @@ public class UserThread extends Thread {
 					while (!logList.isEmpty()) {
 						curMessage = logList.remove(0);
 						if (preMessage != null && preMessage.getTimeStamp().compareTo(curMessage.getTimeStamp()) == 0) {
-							System.out.println(",");
+							System.out.println("||");
 						} else {
 							if (preMessage != null) {
 								System.out.println("->");
