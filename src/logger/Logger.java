@@ -80,7 +80,7 @@ public class Logger {
 		TimeStampedMessage curMessage = null;
 		TimeStampedMessage  preMessage = null;
 		Date date = new Date();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 		String path = logPath + sdf.format(date) + " log.txt";
 		try {   
 			FileWriter fw=new FileWriter(path,true);   
