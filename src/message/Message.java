@@ -12,7 +12,7 @@ public class Message implements Serializable, Cloneable {
     protected boolean sendDuplicate;
     private boolean rcvDuplicate;
     
-    public class Header implements Serializable {
+    public class Header implements Serializable, Cloneable{
         /**
          * 
          */
@@ -25,6 +25,13 @@ public class Message implements Serializable, Cloneable {
         public Header(String dest, String kind) {
             this.dest = dest;
             this.kind = kind;
+        }
+        
+        public Header clone() {
+        	Header cloned = new Header(this.dest, this.kind);
+        	cloned.dest = this.dest;
+        	cloned.kind = this.kind;
+            return cloned;
         }
 
         @Override

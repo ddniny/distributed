@@ -191,7 +191,7 @@ public class MessagePasser {
 					//TimeStampedMessage msg = delayOutMsgQueue.poll();
 					TimeStampedMessage msg = delayOutMsgQueue.poll();
 					if (message.get_seqNumr() == msg.get_seqNumr()) {
-						delayOutMsgQueue.add(message);
+						delayOutMsgQueue.add(msg);
 					} else {
 						sendAway(msg);
 					}

@@ -18,7 +18,7 @@ import timestamp.VectorTimeStamp;
 public class MulticastService{
 
 	//HashMap<String, ArrayList<String>> groupList;
-	HashMap<String, VectorClockService> groupClocks;
+	HashMap<String, VectorClockService> groupClocks; 
 	ArrayList<TimeStampedMessage> receivedMessages;
 	ArrayList<Message> holdbackQueue;
 	MessagePasser mp = MessagePasser.getInstance();
@@ -39,7 +39,7 @@ public class MulticastService{
 
 	public void bMulticast(String groupName, TimeStampedMessage message) throws IOException, CloneNotSupportedException {
 		ArrayList<String> sendArrayList = mp.groups.get(groupName);
-		if (message.get_source() == null) {    //TODO:¸Ä£¡£¡£¡
+		if (message.get_source() == null) {    //TODO:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			message.set_source(mp.myself.getName());
 			VectorClockService currentGroupClock = groupClocks.get(groupName);
 			synchronized (mp.clock) {
@@ -50,7 +50,7 @@ public class MulticastService{
 				//TODO
 				currentGroupClock.updateTimeStamp();
 			}
-			message.setTimeStamp(((VectorTimeStamp)currentGroupClock.getcurrentTimeStamp()).clone().getTimeStamp());//Èç¹ûÊÇmulticast message´øµÄÓ¦¸ÃÊÇgroupµÄtimestamp sendÄÇÀï×¢Òâ
+			message.setTimeStamp(((VectorTimeStamp)currentGroupClock.getcurrentTimeStamp()).clone().getTimeStamp());//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½multicast messageï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½groupï¿½ï¿½timestamp sendï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			message.set_seqNum(mp.IDcounter.incrementAndGet());
 		}
 		message.setMulticast(true);
@@ -64,7 +64,7 @@ public class MulticastService{
 			//			newMessage.set_dest(a);
 			//			newMessage.setGroupName(groupName);
 			//			newMessage.setMulticast(true);
-			TimeStampedMessage newMessage = message.clone(message);
+			TimeStampedMessage newMessage = message.clone();
 			newMessage.setDest(a);
 			mp.send(newMessage);
 		}
@@ -122,7 +122,7 @@ public class MulticastService{
 						if (j == index) {
 							continue;
 						} else {
-							if (messageTime[j] > groupTime[j]) {  //TODO:¸Ä£¡
+							if (messageTime[j] > groupTime[j]) {  //TODO:ï¿½ï¿½ï¿½ï¿½
 								flag = 1;
 								break;
 							}

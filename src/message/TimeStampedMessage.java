@@ -2,7 +2,7 @@ package message;
 
 import timestamp.TimeStamp;
 
-public class TimeStampedMessage extends Message {
+public class TimeStampedMessage extends Message implements Cloneable {
 	/**
 	 * 
 	 */
@@ -16,13 +16,24 @@ public class TimeStampedMessage extends Message {
 		// TODO Auto-generated constructor stub
 		this.ts = ts;
 	}
-    public TimeStampedMessage clone(TimeStampedMessage message) {
-		TimeStampedMessage cloned = new TimeStampedMessage(message.getDest(), message.getKind(), message.payload, message.ts);
-		cloned.header = message.header;
-		cloned.groupName = message.groupName;
+	
+	public TimeStampedMessage clone() {
+		TimeStampedMessage cloned = new TimeStampedMessage(this.getDest(), this.getKind(), this.getPayload(), this.ts);
+//		try {
+//			cloned = (TimeStampedMessage) super.clone();
+//					} catch (Exception e) {
+//			// TODO: handle exception
+//		}
+		cloned.header = this.header.clone();
+		cloned.groupName = this.groupName;
 		cloned.multicast = true;
-		cloned.sendDuplicate = message.sendDuplicate;
-		cloned.header = message.header;
+		cloned.sendDuplicate = this.sendDuplicate;
+		String sourString = this.get_source();
+		cloned.set_source(sourString);
+		String destString = this.getDest();
+		cloned.setDest(destString);
+		int seqNum = this.get_seqNumr();
+		cloned.set_seqNum(seqNum);
 		return cloned;
 	}
 	
