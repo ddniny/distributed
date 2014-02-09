@@ -2,7 +2,7 @@ package message;
 
 import java.io.Serializable;
 
-public class Message implements Serializable {
+public class Message implements Serializable, Cloneable {
     /**
      * 
      */
@@ -33,6 +33,8 @@ public class Message implements Serializable {
                     + source + ", dest=" + dest + ", kind=" + kind + "]";
         }   
     }
+    
+
     
     public Message(String dest, String kind, Object data) {
         this.header = new Header(dest, kind);

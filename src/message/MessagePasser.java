@@ -186,9 +186,15 @@ public class MessagePasser {
 			sendAwayToLogger(message, "Send");
 			// send delayed message
 			synchronized(delayOutMsgQueue) {
-				while (!delayOutMsgQueue.isEmpty()) {
+				int size = delayOutMsgQueue.size();
+				for (int i = 0; i < size; i++) {
+					//TimeStampedMessage msg = delayOutMsgQueue.poll();
 					TimeStampedMessage msg = delayOutMsgQueue.poll();
-					sendAway(msg);
+					if (message.get_seqNumr() == msg.get_seqNumr()) {
+						delayOutMsgQueue.add(message);
+					} else {
+						sendAway(msg);
+					}
 				}
 			}
 			// send duplicated message if needed

@@ -16,7 +16,15 @@ public class TimeStampedMessage extends Message {
 		// TODO Auto-generated constructor stub
 		this.ts = ts;
 	}
-	
+    public TimeStampedMessage clone(TimeStampedMessage message) {
+		TimeStampedMessage cloned = new TimeStampedMessage(message.getDest(), message.getKind(), message.payload, message.ts);
+		cloned.header = message.header;
+		cloned.groupName = message.groupName;
+		cloned.multicast = true;
+		cloned.sendDuplicate = message.sendDuplicate;
+		cloned.header = message.header;
+		return cloned;
+	}
 	
 	public void setTimeStamp(Object newTS) {
 		ts.setTimeStamp(newTS);

@@ -35,6 +35,8 @@ SendRules :
   - Action : duplicate      # 3rd message from alice that anyone 
     Src    : alice        # receives will be duplicated
     Kind   : Ack
+  - Action : delay      # 3rd message from alice that anyone 
+    Dest   : bob        # receives will be duplicated
 
 ReceiveRules :
   - Action : duplicate      # 3rd message from Charlie that anyone 

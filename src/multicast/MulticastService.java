@@ -64,8 +64,9 @@ public class MulticastService{
 			//			newMessage.set_dest(a);
 			//			newMessage.setGroupName(groupName);
 			//			newMessage.setMulticast(true);
-			message.setDest(a);
-			mp.send(message);
+			TimeStampedMessage newMessage = message.clone(message);
+			newMessage.setDest(a);
+			mp.send(newMessage);
 		}
 	}
 
