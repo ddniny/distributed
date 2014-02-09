@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import multicast.MulticastService;
+
 import org.yaml.snakeyaml.Yaml;
 
 import clock.ClockService;
@@ -32,46 +34,48 @@ import util.Config;
 public class MessagePasser {
 	// instance to call by other classes
 	private static volatile MessagePasser instance = null;
-	private static String CLOCKTYPE = null;
+	public static String CLOCKTYPE = null;
 
 	// node and rules
 	public HashMap<String, Node> nodeMap = null;
 	public HashMap<String, ObjectOutputStream> outputStreamMap = null;
 	public ArrayList<Rule> sendRules = null;
 	public ArrayList<Rule> rcvRules = null;
+	public HashMap<String, ArrayList<String>> groups = null;
 	public Node myself = null;
 	public int nodeNum = 0;   //~~~~~~~~used for construct the clock
 	public int processIndex = 0;
 
 	// queue and other data structure useful in communication
 	// TODO replace Message with TimeStamped Message
-//	public ConcurrentLinkedQueue<Message> delayInMsgQueue;
-//	public ConcurrentLinkedQueue<Message> delayOutMsgQueue;
-//	public ConcurrentLinkedQueue<Message> rcvBuffer;
-//	public ArrayList<Message> receiveList;
-	
+	//	public ConcurrentLinkedQueue<Message> delayInMsgQueue;
+	//	public ConcurrentLinkedQueue<Message> delayOutMsgQueue;
+	//	public ConcurrentLinkedQueue<Message> rcvBuffer;
+	//	public ArrayList<Message> receiveList;
+
 	public ConcurrentLinkedQueue<TimeStampedMessage> delayInMsgQueue;
 	public ConcurrentLinkedQueue<TimeStampedMessage> delayOutMsgQueue;
 	public ConcurrentLinkedQueue<TimeStampedMessage> rcvBuffer;
 	public ArrayList<TimeStampedMessage> receiveList;
-	
+
 
 	// set up an atomic counter for message id
-	private AtomicInteger IDcounter;
+	public AtomicInteger IDcounter;
 
 	//file
 	public long modified = 0;
 	public String configFileName = null;
 	public String localName = null;
-	
+
 	private ServerSocket server;
-	
+
 	//ClockService
 	public ClockServiceFactory csFactory;
 	public ClockService clock;
-	
+
 	//logger
 	public boolean currentToLogger = false;
+	public static volatile MulticastService multicastService = null; 
 
 
 	/** Constructor of MessagePasser, parse the configuration file
@@ -104,6 +108,8 @@ public class MessagePasser {
 			sendRules = Config.parseRules(map.get("SendRules"));
 			rcvRules = Config.parseRules(map.get("ReceiveRules"));
 			CLOCKTYPE = Config.parseClockType(map.get("ClockType"));
+			groups = Config.parseGroupsHashMap(map.get("Groups"));
+
 		} catch (FileNotFoundException e) {
 			System.err.println("ERROR: Cannot find the configuration file!");
 			e.printStackTrace();
@@ -121,16 +127,16 @@ public class MessagePasser {
 
 		// initiate data structures
 		outputStreamMap = new HashMap<String, ObjectOutputStream>();
-//		delayInMsgQueue = new ConcurrentLinkedQueue<Message>();
-//		delayOutMsgQueue = new ConcurrentLinkedQueue<Message>();
-//		rcvBuffer = new ConcurrentLinkedQueue<Message>();
-//		receiveList = new ArrayList<Message>();
+		//		delayInMsgQueue = new ConcurrentLinkedQueue<Message>();
+		//		delayOutMsgQueue = new ConcurrentLinkedQueue<Message>();
+		//		rcvBuffer = new ConcurrentLinkedQueue<Message>();
+		//		receiveList = new ArrayList<Message>();
 		delayInMsgQueue = new ConcurrentLinkedQueue<TimeStampedMessage>();
 		delayOutMsgQueue = new ConcurrentLinkedQueue<TimeStampedMessage>();
 		rcvBuffer = new ConcurrentLinkedQueue<TimeStampedMessage>();
 		receiveList = new ArrayList<TimeStampedMessage>();
 		csFactory = new ClockServiceFactory();
-		
+
 		// TODO: using objectFactory create a clock
 		// @param: the kind of clock
 		// @param: nodeNum
@@ -138,7 +144,7 @@ public class MessagePasser {
 		csFactory.registerClockService("VectorClock", VectorClockService.class);
 		clock = csFactory.getClockService(CLOCKTYPE);
 		clock.initialize(processIndex, nodeNum);
-		
+
 	}
 
 	/**
@@ -156,9 +162,11 @@ public class MessagePasser {
 	 */
 	public void send(TimeStampedMessage message) throws IOException {
 		boolean dupToLog = false;
-		clock.updateTimeStamp();
-		message.setTimeStamp(clock.getcurrentTimeStamp().getTimeStamp());
-		message.set_seqNum(IDcounter.incrementAndGet());
+		//clock.updateTimeStamp();TODO ????
+		if (!message.isMulticast()) {
+			message.setTimeStamp(clock.getcurrentTimeStamp().getTimeStamp());
+			message.set_seqNum(IDcounter.incrementAndGet());
+		}
 		boolean duplicate = false;
 		switch (matchSendRule(message)) {
 		case DROP:
@@ -225,8 +233,8 @@ public class MessagePasser {
 			System.err.println("ERROR: send message error, the other side may be offline " + message);
 		}
 	}
-	
-	
+
+
 	/**
 	 * Send away message to logger
 	 * @param message
@@ -262,21 +270,21 @@ public class MessagePasser {
 	 */
 	//public ArrayList<Message> receive() {
 	public Message receive() {
-		
+
 		synchronized (rcvBuffer) {
 			while (!rcvBuffer.isEmpty()) {
 				receiveList.add(rcvBuffer.poll());
 			}
 		}
-		
+
 		if (receiveList.isEmpty()) {
 			clock.updateTimeStamp();
 			return null;
 		}
-		
+
 		// TODO compare and increment timeStamp
 		clock.updateTimeStamp(receiveList.get(0).getTimeStamp());
-		
+
 		return receiveList.remove(0);
 	}
 
@@ -305,12 +313,12 @@ public class MessagePasser {
 		long lastModified = file.lastModified();
 		int closeServerF = 0;
 		if (lastModified > modified) {
-		    System.out.println("INFO: Configuration file modified! Reload again!");
-		    
+			System.out.println("INFO: Configuration file modified! Reload again!");
+
 			modified = lastModified;
 			Yaml yaml = new Yaml();
 			InputStream input;
-			
+
 			try {
 				input = new FileInputStream(file);
 				Map<String,  ArrayList<Map<String, Object>>> map = 
@@ -320,31 +328,31 @@ public class MessagePasser {
 				ArrayList<Rule> newRcvRules = Config.parseRules(map.get("ReceiveRules"));
 				this.myself = newNodeMap.get(localName);
 				outputStreamMap.clear();
-				
+
 				closeServerF = nodeMap.get(localName).equals(newNodeMap.get(localName));
 				for (Rule newRule : newSendRules) {
-	                int matchIndex = -1;
-				    if ((matchIndex = sendRules.indexOf(newRule)) != -1) {
-				        newRule.setMatchedTimes(sendRules.get(matchIndex).getMatchedTimes());
-				    }
+					int matchIndex = -1;
+					if ((matchIndex = sendRules.indexOf(newRule)) != -1) {
+						newRule.setMatchedTimes(sendRules.get(matchIndex).getMatchedTimes());
+					}
 				}
 
 				for (Rule newRule : newRcvRules) {
-	                int matchIndex = -1;
-	                if ((matchIndex = rcvRules.indexOf(newRule)) != -1) {
-                        newRule.setMatchedTimes(rcvRules.get(matchIndex).getMatchedTimes());
-                    }
+					int matchIndex = -1;
+					if ((matchIndex = rcvRules.indexOf(newRule)) != -1) {
+						newRule.setMatchedTimes(rcvRules.get(matchIndex).getMatchedTimes());
+					}
 				}
 
 				nodeMap = newNodeMap;
 				sendRules = newSendRules;
 				rcvRules = newRcvRules;
 				if (closeServerF > 0){
-				    server.close();
-				    server = new ServerSocket(myself.getPort());
-				    new ListenerThread(server).start();
+					server.close();
+					server = new ServerSocket(myself.getPort());
+					new ListenerThread(server).start();
 				}
-				
+
 				input.close();
 			} catch (FileNotFoundException e) {
 				System.err.println("ERROR: The configuration file has been deleted!");
@@ -367,7 +375,21 @@ public class MessagePasser {
 			processIndex = 4;
 		}else throw new RuntimeException("No such user.");
 	}
-	
+
+	public int getNodeIndex (String nodeName) {
+		if (nodeName.equalsIgnoreCase("logger")) {
+			return 0;
+		}else if (nodeName.equalsIgnoreCase("alice")) {
+			return 1;
+		}else if (nodeName.equalsIgnoreCase("bob")) {
+			return 2;
+		}else if (nodeName.equalsIgnoreCase("charlie")) {
+			return 3;
+		}else if (nodeName.equalsIgnoreCase("daphnie")) {
+			return 4;
+		}else throw new RuntimeException("No such user.");
+	}
+
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
 			System.out.println("Usage: configuration_filename local_name");
@@ -375,6 +397,7 @@ public class MessagePasser {
 		}    
 		try {
 			instance = new MessagePasser(args[0], args[1]);
+			multicastService = new MulticastService();
 		} catch (SecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

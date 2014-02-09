@@ -26,6 +26,12 @@ public class VectorClockService extends ClockService {
 		currentTimeStamp.setTimeStamp(currentTSVector);
 	}
 	
+	public void updateGroupTimeStamp (int senderIndex) { //
+		int[] nextTimeStamp = (int[]) currentTimeStamp.getTimeStamp();
+		nextTimeStamp[senderIndex]++;
+		currentTimeStamp.setTimeStamp(nextTimeStamp);
+	}
+	
 	public int getProcessIndex () {
 		return processIndex;
 	}

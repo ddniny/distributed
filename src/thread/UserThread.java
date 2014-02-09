@@ -33,7 +33,7 @@ public class UserThread extends Thread {
 				if (cmdInput.equals("1")) {
 					System.out.println("Please enter your dest:");
 					String dest = in.readLine();
-					while (!passer.nodeMap.containsKey(dest)) {
+					while (!passer.nodeMap.containsKey(dest) && !passer.groups.containsKey(dest)) {
 						System.out.println("Your Dest has not been registered, enter again:");
 						dest = in.readLine();
 					}
@@ -59,8 +59,12 @@ public class UserThread extends Thread {
 					//Message msg = new Message(dest, kind, data);
 
 					TimeStampedMessage tsMsg = new TimeStampedMessage(dest, kind, data, passer.clock.getcurrentTimeStamp());
-					tsMsg.set_source(passer.myself.getName());
-					passer.send(tsMsg);
+					if (passer.groups.containsKey(tsMsg.getDest())) { //it is a multicast message
+						passer.multicastService.bMulticast(tsMsg.getDest(), tsMsg);
+					} else {
+						tsMsg.set_source(passer.myself.getName());
+						passer.send(tsMsg);
+					}
 					//                    msg.set_source(passer.myself.getName());
 					//                    passer.send(msg);
 				} else if (cmdInput.equals("2")) {

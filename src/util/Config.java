@@ -42,6 +42,21 @@ public class Config {
         }
     	return clockType;
     }
+    
+    public static HashMap<String, ArrayList<String>> parseGroupsHashMap (ArrayList<Map<String, Object>> element) {
+    	HashMap<String, ArrayList<String>> groupsMap = new HashMap<String, ArrayList<String>>();
+    	for (Map<String, Object> yamlGroup : element) {
+    		try {
+                String name = yamlGroup.get("Name").toString();
+                ArrayList<String> members = (ArrayList<String>) yamlGroup.get("Members");
+                groupsMap.put(name, members);
+            } catch (Exception e) {
+                System.err.println("ERROR: configuration file error - " + yamlGroup);
+                e.printStackTrace();
+            }
+    	}
+    	return groupsMap;
+    }
 
     /**
      * Parse rules from yaml file

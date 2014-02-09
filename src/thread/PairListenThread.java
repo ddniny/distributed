@@ -16,73 +16,82 @@ import record.Rule.ACTION;
  *
  */
 public class PairListenThread extends Thread {
-    private Socket socket = null;
-    
-    public PairListenThread(Socket socket) {
-        this.socket = socket;
-    }
+	private Socket socket = null;
 
-    @Override
-    public void run() {
-        MessagePasser passer = MessagePasser.getInstance();
-        try {
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            while(true) {
-                TimeStampedMessage message = (TimeStampedMessage)in.readObject();
-                switch (matchReceiveRule(message, passer)) {
-                case DROP:
-                    System.out.println("INFO: Drop Message (Receive) " + message);
-                    break;
-                case DELAY:
-                    passer.delayInMsgQueue.add(message);
-                    break;
-                case DUPLICATE:
-                    // no break, because at least one message should be received
-                    message.set_rcvDuplicate(true);
-                default:
-                    receiveIn(message, passer);       
-                    // receive delayed message
-                    synchronized(passer.delayInMsgQueue) {
-                        while (!passer.delayInMsgQueue.isEmpty()) {
-                            receiveIn(passer.delayInMsgQueue.poll(), passer);
-                        }
-                    }
+	public PairListenThread(Socket socket) {
+		this.socket = socket;
+	}
 
-                    // receive duplicated message if needed
-                    if (message.get_rcvDuplicate()) {
-                        receiveIn(message, passer);
-                    }
-                }   
-            }
-        } catch (Exception e) {
-            System.err.println("ERROR: PairListenThread corrupt");
-            e.printStackTrace();
-        }
-    }
+	@Override
+	public void run() {
+		MessagePasser passer = MessagePasser.getInstance();
+		try {
+			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+			while(true) {
+				TimeStampedMessage message = (TimeStampedMessage)in.readObject();
+				if (message.isMulticast()) {
+					passer.multicastService.bDeliver(message.getGroupName(), message);
+				} else {
+				receivePasser(message, passer);
+				}
 
-    /**
-     * Add message to receive buffer
-     * @param message
-     * @param passer
-     */
-    private void receiveIn(TimeStampedMessage message, MessagePasser passer) {
-        passer.rcvBuffer.offer(message);
-    }
+			}
+		} catch (Exception e) {
+			System.err.println("ERROR: PairListenThread corrupt");
+			e.printStackTrace();
+		}
+	}
 
-    /**
-     * Check if the rule is matched
-     * @param message
-     * @param passer
-     * @return
-     * @throws IOException
-     */
-    private ACTION matchReceiveRule(Message message, MessagePasser passer) throws IOException {
-        passer.checkModified();
-    	for (Rule rule : passer.rcvRules){
-    		if (rule.isMatch(message)) {
-    			return rule.getAction();
-    		}
-    	}
-        return ACTION.DEFAULT;
-    }
+	public static void receivePasser(TimeStampedMessage message, MessagePasser passer) throws IOException {
+		switch (matchReceiveRule(message, passer)) {
+		case DROP:
+			System.out.println("INFO: Drop Message (Receive) " + message);
+			break;
+		case DELAY:
+			passer.delayInMsgQueue.add(message);
+			break;
+		case DUPLICATE:
+			// no break, because at least one message should be received
+			message.set_rcvDuplicate(true);
+		default:
+			receiveIn(message, passer);       
+			// receive delayed message
+			synchronized(passer.delayInMsgQueue) {
+				while (!passer.delayInMsgQueue.isEmpty()) {
+					receiveIn(passer.delayInMsgQueue.poll(), passer);
+				}
+			}
+
+			// receive duplicated message if needed
+			if (message.get_rcvDuplicate()) {
+				receiveIn(message, passer);
+			}
+		} 
+	}
+
+	/**
+	 * Add message to receive buffer
+	 * @param message
+	 * @param passer
+	 */
+	private static void receiveIn(TimeStampedMessage message, MessagePasser passer) {
+		passer.rcvBuffer.offer(message);
+	}
+
+	/**
+	 * Check if the rule is matched
+	 * @param message
+	 * @param passer
+	 * @return
+	 * @throws IOException
+	 */
+	private static ACTION matchReceiveRule(Message message, MessagePasser passer) throws IOException {
+		passer.checkModified();
+		for (Rule rule : passer.rcvRules){
+			if (rule.isMatch(message)) {
+				return rule.getAction();
+			}
+		}
+		return ACTION.DEFAULT;
+	}
 }
