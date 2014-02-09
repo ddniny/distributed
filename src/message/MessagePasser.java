@@ -162,8 +162,8 @@ public class MessagePasser {
 	 */
 	public void send(TimeStampedMessage message) throws IOException {
 		boolean dupToLog = false;
-		//clock.updateTimeStamp();TODO ????
 		if (!message.isMulticast()) {
+			clock.updateTimeStamp();//TODO ????
 			message.setTimeStamp(clock.getcurrentTimeStamp().getTimeStamp());
 			message.set_seqNum(IDcounter.incrementAndGet());
 		}
@@ -326,6 +326,7 @@ public class MessagePasser {
 				HashMap<String, Node> newNodeMap = Config.parseNodeMap(map.get("Configuration"));
 				ArrayList<Rule> newSendRules = Config.parseRules(map.get("SendRules"));
 				ArrayList<Rule> newRcvRules = Config.parseRules(map.get("ReceiveRules"));
+				HashMap<String, ArrayList<String>> newGroups = Config.parseGroupsHashMap(map.get("Groups"));
 				this.myself = newNodeMap.get(localName);
 				outputStreamMap.clear();
 
@@ -347,6 +348,7 @@ public class MessagePasser {
 				nodeMap = newNodeMap;
 				sendRules = newSendRules;
 				rcvRules = newRcvRules;
+				groups = newGroups;
 				if (closeServerF > 0){
 					server.close();
 					server = new ServerSocket(myself.getPort());

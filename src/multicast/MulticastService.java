@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import clock.ClockService;
 import clock.VectorClockService;
 import message.Message;
 import message.MessagePasser;
@@ -36,16 +37,20 @@ public class MulticastService{
 		}     
 	}
 
-	public void bMulticast(String groupName, TimeStampedMessage message) throws IOException {
+	public void bMulticast(String groupName, TimeStampedMessage message) throws IOException, CloneNotSupportedException {
 		ArrayList<String> sendArrayList = mp.groups.get(groupName);
 		if (message.get_source() == null) {    //TODO:改！！！
 			message.set_source(mp.myself.getName());
 			VectorClockService currentGroupClock = groupClocks.get(groupName);
+			synchronized (mp.clock) {
+				//TODO
+				mp.clock.updateTimeStamp();
+			}
 			synchronized (currentGroupClock) {
 				//TODO
 				currentGroupClock.updateTimeStamp();
 			}
-			message.setTimeStamp(currentGroupClock.getcurrentTimeStamp().getTimeStamp());//如果是multicast message带的应该是group的timestamp send那里注意
+			message.setTimeStamp(((VectorTimeStamp)currentGroupClock.getcurrentTimeStamp()).clone().getTimeStamp());//如果是multicast message带的应该是group的timestamp send那里注意
 			message.set_seqNum(mp.IDcounter.incrementAndGet());
 		}
 		message.setMulticast(true);
@@ -64,7 +69,7 @@ public class MulticastService{
 		}
 	}
 
-	public void bDeliver(String groupName, TimeStampedMessage message) throws IOException {
+	public void bDeliver(String groupName, TimeStampedMessage message) throws IOException, CloneNotSupportedException {
 		synchronized (receivedMessages) {
 			if (receivedMessages != null) {
 				for (TimeStampedMessage tsMsg : receivedMessages) {

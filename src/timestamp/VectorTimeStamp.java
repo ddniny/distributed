@@ -3,8 +3,10 @@ package timestamp;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import message.TimeStampedMessage;
 
-public class VectorTimeStamp extends TimeStamp implements Serializable {
+
+public class VectorTimeStamp extends TimeStamp implements Serializable{
 	/**
 	 * 
 	 */
@@ -14,7 +16,15 @@ public class VectorTimeStamp extends TimeStamp implements Serializable {
 	public VectorTimeStamp(int processNo) {
 		vectorTS = new int[processNo];
 	}
-
+	
+	public VectorTimeStamp clone() {
+		VectorTimeStamp cloned = new VectorTimeStamp(vectorTS.length);
+		for (int i = 0; i < cloned.vectorTS.length; i++) {
+			cloned.vectorTS[i] = vectorTS[i];
+		}
+		return cloned;
+	}
+	
 	@Override
 	public int compareTo(TimeStamp v) {
 		// TODO Auto-generated method stub

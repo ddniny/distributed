@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import timestamp.TimeStamp;
+import timestamp.VectorTimeStamp;
+import clock.ClockService;
 import message.Message;
 import message.MessagePasser;
 import message.TimeStampedMessage;
@@ -58,7 +61,7 @@ public class UserThread extends Thread {
 					// create and send message
 					//Message msg = new Message(dest, kind, data);
 
-					TimeStampedMessage tsMsg = new TimeStampedMessage(dest, kind, data, passer.clock.getcurrentTimeStamp());
+					TimeStampedMessage tsMsg = new TimeStampedMessage(dest, kind, data, ((VectorTimeStamp) passer.clock.getcurrentTimeStamp()).clone());
 					if (passer.groups.containsKey(tsMsg.getDest())) { //it is a multicast message
 						passer.multicastService.bMulticast(tsMsg.getDest(), tsMsg);
 					} else {

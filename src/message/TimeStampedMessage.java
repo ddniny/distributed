@@ -17,6 +17,7 @@ public class TimeStampedMessage extends Message {
 		this.ts = ts;
 	}
 	
+	
 	public void setTimeStamp(Object newTS) {
 		ts.setTimeStamp(newTS);
 	}
