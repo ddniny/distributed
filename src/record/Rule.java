@@ -1,6 +1,7 @@
 package record;
 
 import message.Message;
+import message.TimeStampedMessage;
 
 public class Rule {
 	public enum ACTION {
@@ -93,7 +94,7 @@ public class Rule {
 	public boolean isMatch(Message message) {
 		if (this.duplicate == null || (this.duplicate.equals(message.get_sendDuplicate()))) {
 			if (this.id == 0 || this.id == message.get_seqNumr()){
-				if (this.src == null || this.src.equalsIgnoreCase(message.get_source())){
+				if (this.src == null || (this.src.equalsIgnoreCase(message.get_source()) && message.getMedium() == null )){
 					if (this.dest == null || this.dest.equalsIgnoreCase(message.getDest())){
 						if (this.kind == null || this.kind.equalsIgnoreCase(message.getKind())){
 							setMatchedTimes(this.matchedTimes + 1);

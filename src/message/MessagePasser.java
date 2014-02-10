@@ -262,6 +262,11 @@ public class MessagePasser {
 	 */
 	private ACTION matchSendRule(Message message) throws IOException {
 		checkModified();
+		if (((TimeStampedMessage) message).getGroupName()!=null) {
+			if(!groups.get(((TimeStampedMessage) message).getGroupName()).contains(message.getDest())) {
+				return ACTION.DROP;
+			}
+		}
 		for (Rule rule : sendRules){
 			if (rule.isMatch(message)) {
 				return rule.getAction();

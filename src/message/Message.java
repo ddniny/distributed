@@ -11,6 +11,7 @@ public class Message implements Serializable, Cloneable {
     protected Object payload = null;
     protected boolean sendDuplicate;
     private boolean rcvDuplicate;
+    private String medium = null;
     
     public class Header implements Serializable, Cloneable{
         /**
@@ -105,6 +106,14 @@ public class Message implements Serializable, Cloneable {
     public boolean get_rcvDuplicate() {
         return this.rcvDuplicate;
     }
+    
+    public String getMedium() {
+		return medium;
+	}
+
+	public void setMedium(String medium) {
+		this.medium = medium;
+	}
 
     @Override
     public String toString() {

@@ -34,6 +34,7 @@ public class TimeStampedMessage extends Message implements Cloneable {
 		cloned.setDest(destString);
 		int seqNum = this.get_seqNumr();
 		cloned.set_seqNum(seqNum);
+		cloned.setMedium(this.getMedium());
 		return cloned;
 	}
 	
@@ -46,7 +47,7 @@ public class TimeStampedMessage extends Message implements Cloneable {
 	}
 	
 	 public String toString() {
-		 return "[header=" + super.header + ", payload=" + super.payload
+		 return "[header=" + super.header + ", medium=" + super.getMedium() + ", multicast=" + multicast + ", Group=" + groupName + ", payload=" + super.payload
 	                + ", sendDuplicate=" + super.sendDuplicate + ", TimeStamp=" + getTimeStamp().toString() + "]";
 	}
 

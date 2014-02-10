@@ -3,6 +3,7 @@ package multicast;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -79,19 +80,17 @@ public class MulticastService{
 					}
 				} 
 			}
-			//		if (receivedMessages.contains(message)) {
-			//			return;
-			//		} 
-			//else {
 			receivedMessages.add(message);
 			synchronized (holdbackQueue) {
 			if (!message.get_source().equals(mp.localName)) {
 				holdbackQueue.add(message);
-				bMulticast(groupName, message);
+				TimeStampedMessage newMessage = message.clone();
+				newMessage.setMedium(mp.myself.getName());
+				bMulticast(groupName, newMessage);
 			}
 			}
 		}
-		//}
+		
 		if (!message.get_source().equals(mp.localName)) {
 			synchronized (holdbackQueue) {
 				rDeliver(groupName, holdbackQueue);
