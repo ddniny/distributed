@@ -199,10 +199,11 @@ public class MessagePasser {
 			}
 			// send duplicated message if needed
 			if (duplicate) {
-				message.set_sendDuplicate(true);
-				sendAway(message);
+				TimeStampedMessage newMessage = message.clone();
+				newMessage.set_sendDuplicate(true);
+				sendAway(newMessage);
 				currentToLogger = dupToLog;
-				sendAwayToLogger(message, "Sender Duplicate");
+				sendAwayToLogger(newMessage, "Sender Duplicate");
 				dupToLog = false;
 			}
 		}

@@ -75,7 +75,7 @@ public class MulticastService{
 		synchronized (receivedMessages) {
 			if (receivedMessages != null) {
 				for (TimeStampedMessage tsMsg : receivedMessages) {
-					if(tsMsg.get_source().equals(message.get_source()) && tsMsg.get_seqNumr() == message.get_seqNumr()){
+					if(tsMsg.get_source().equals(message.get_source()) && tsMsg.get_seqNumr() == message.get_seqNumr() && (tsMsg.get_sendDuplicate() == message.get_sendDuplicate())){
 						return;
 					}
 				} 
@@ -116,7 +116,7 @@ public class MulticastService{
 				String src = message.get_source();
 				int index = mp.getNodeIndex(src);
 				int flag = 0;
-				if (messageTime[index] - groupTime[index] == 1) {
+				if ((messageTime[index] - groupTime[index] == 1) || (messageTime[index] == groupTime[index] && message.get_sendDuplicate())) { //duplicate????
 					for (int j = 0; j < length; j++) {
 						if (j == index) {
 							continue;
@@ -129,8 +129,10 @@ public class MulticastService{
 					}
 					if (flag == 0) {
 						synchronized (currentGroupClock) {
+							if (!message.get_sendDuplicate()) { 	//duplicate case
 							currentGroupClock.updateGroupTimeStamp(index); //add the timeStamp on the sender's index position
 							sendFlag++;
+							}
 						}
 						synchronized (holdbackQueue) {
 							holdbackQueue.remove(i);
