@@ -13,6 +13,7 @@ TODO major:
 2. delay queue, input queue.
 3. auto test
 .... a lot
+4. solve duplicate
 
 TODO min:
 1. missing/wrong value check
