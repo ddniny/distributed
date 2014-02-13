@@ -1,21 +1,24 @@
 package record;
 
+import java.util.ArrayList;
+
 public class Node {
     private String name;
     private String ipAddress;
     private int port;
-    
+    private ArrayList<String> memberOf;    
     /**
      * Constructor of node
      * @param name
      * @param ipAddress
      * @param port
      */
-    public Node(String name, String ipAddress, int port) {
+    public Node(String name, String ipAddress, int port, ArrayList<String> memberOf) {
         super();
         this.name = name;
         this.ipAddress = ipAddress;
         this.port = port;
+        this.memberOf = memberOf;
     }
 
     public String getName() {
@@ -68,4 +71,12 @@ public class Node {
         return "[name=" + name + ", ipAddress=" + ipAddress + ", port="
                 + port + "]";
     }
+
+	public ArrayList<String> getMemberOf() {
+		return memberOf;
+	}
+
+	public void setMemberOf(ArrayList<String> memberOf) {
+		this.memberOf = memberOf;
+	}
 }

@@ -10,6 +10,7 @@ import clock.ClockService;
 import message.Message;
 import message.MessagePasser;
 import message.TimeStampedMessage;
+import mutex.Mutex;
 
 /**
  * 
@@ -29,7 +30,7 @@ public class UserThread extends Thread {
 
 			while (true) {
 				// wait user input
-				System.out.println("Please enter your scenario \t 1: Send, 2: Receive, 3: Retrieve");
+				System.out.println("Please enter your scenario \t 1: Send, 2: Receive, 3: Retrieve, 4: Request Mutex");
 				in = new BufferedReader(new InputStreamReader(System.in));
 				String cmdInput = in.readLine();
 				// handle with "send"
@@ -61,7 +62,7 @@ public class UserThread extends Thread {
 					// create and send message
 					//Message msg = new Message(dest, kind, data);
 
-					TimeStampedMessage tsMsg = new TimeStampedMessage(dest, kind, data, ((VectorTimeStamp) passer.clock.getcurrentTimeStamp()).clone());
+					TimeStampedMessage tsMsg = new TimeStampedMessage(dest, kind, data, passer.clock.getcurrentTimeStamp().clone());
 					if (passer.groups.containsKey(tsMsg.getDest())) { //it is a multicast message
 						passer.multicastService.bMulticast(tsMsg.getDest(), tsMsg);
 					} else {
@@ -110,6 +111,19 @@ public class UserThread extends Thread {
 						System.out.print(curMessage);
 					}
 					System.out.println();
+				} else if (cmdInput.equals("4")) {
+					System.out.println("Sending request to group members...");
+					System.out.println("Please wait...");
+					Mutex.getInstance().request();
+					System.out.println("Get into the critical section !");
+					while (true) {
+						System.out.println("Press \"1\" to release the section.");	
+						cmdInput = in.readLine();
+						if (cmdInput.equals("1")) {
+							Mutex.getInstance().release();
+							break;
+						}
+					}	
 				}
 			}
 		} catch (Exception e) {

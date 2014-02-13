@@ -7,6 +7,7 @@ import java.net.Socket;
 import message.Message;
 import message.MessagePasser;
 import message.TimeStampedMessage;
+import mutex.Mutex;
 import record.Rule;
 import record.Rule.ACTION;
 
@@ -32,7 +33,7 @@ public class PairListenThread extends Thread {
 				if (message.isMulticast()) {
 					passer.multicastService.bDeliver(message.getGroupName(), message);
 				} else {
-				receivePasser(message, passer);
+					receivePasser(message, passer);
 				}
 
 			}
@@ -54,17 +55,25 @@ public class PairListenThread extends Thread {
 			// no break, because at least one message should be received
 			message.set_rcvDuplicate(true);
 		default:
-			receiveIn(message, passer);       
-			// receive delayed message
-			synchronized(passer.delayInMsgQueue) {
-				while (!passer.delayInMsgQueue.isEmpty()) {
-					receiveIn(passer.delayInMsgQueue.poll(), passer);
+			if (message.getKind().equals("mutexRequest")) {
+				Mutex.getInstance().requstHandle(message);
+			} else if (message.getKind().equals("releaseRequest")) {
+				Mutex.getInstance().releaseHandle();;
+			} else if (message.getKind().equals("mutexReply")) {
+				Mutex.getInstance().voteHandle(message);
+			} else {
+				receiveIn(message, passer);       
+				// receive delayed message
+				synchronized(passer.delayInMsgQueue) {
+					while (!passer.delayInMsgQueue.isEmpty()) {
+						receiveIn(passer.delayInMsgQueue.poll(), passer);
+					}
 				}
-			}
 
-			// receive duplicated message if needed
-			if (message.get_rcvDuplicate()) {
-				receiveIn(message, passer);
+				// receive duplicated message if needed
+				if (message.get_rcvDuplicate()) {
+					receiveIn(message, passer);
+				}
 			}
 		} 
 	}
@@ -87,6 +96,9 @@ public class PairListenThread extends Thread {
 	 */
 	private static ACTION matchReceiveRule(Message message, MessagePasser passer) throws IOException {
 		passer.checkModified();
+		if (message.get_source().equals(passer.localName) && (message.getKind().equals("mutexRequest") || message.getKind().equals("releaseRequest"))) {
+			return ACTION.DROP;
+		}
 		for (Rule rule : passer.rcvRules){
 			if (rule.isMatch(message)) {
 				return rule.getAction();

@@ -75,7 +75,7 @@ public class MessagePasser {
 
 	//logger
 	public boolean currentToLogger = false;
-	public static volatile MulticastService multicastService = null; 
+	public volatile static MulticastService multicastService = null; 
 
 
 	/** Constructor of MessagePasser, parse the configuration file
@@ -165,7 +165,9 @@ public class MessagePasser {
 		if (!message.isMulticast()) {
 			clock.updateTimeStamp();//TODO ????
 			message.setTimeStamp(clock.getcurrentTimeStamp().getTimeStamp());
-			message.set_seqNum(IDcounter.incrementAndGet());
+			if (message.get_seqNumr() == 0) {
+				message.set_seqNum(IDcounter.incrementAndGet());
+			}
 		}
 		boolean duplicate = false;
 		switch (matchSendRule(message)) {

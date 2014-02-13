@@ -26,7 +26,7 @@ public class TimeStampedMessage extends Message implements Cloneable {
 //		}
 		cloned.header = this.header.clone();
 		cloned.groupName = this.groupName;
-		cloned.multicast = true;
+		cloned.multicast = this.multicast;
 		cloned.sendDuplicate = this.sendDuplicate;
 		String sourString = this.get_source();
 		cloned.set_source(sourString);

@@ -12,30 +12,40 @@ Configuration :
 
   - Name : alice 
     IP   : localhost
-    Port : 12345        # This is the incoming port on which MP will listen
+    Port : 12345
+    memberOf :
+      - Group1          # This is the incoming port on which MP will listen
                         # May be changed for further communication as usual
   - Name : bob 
     IP   : localhost
     Port : 14255
+    memberOf :
+      - Group1
+      - Group2
     
   - Name : charlie
     IP   : localhost
     Port : 12998
+    memberOf :
+      - Group1
+      - Group2
     
   - Name : daphnie
-    IP   : 128.237.228.38
+    IP   : localhost
     Port : 1987
+    memberOf :
+      - Group2
 
 SendRules :
   - Action : drop # Ack message number 4 from bob to alice will not be sent
-    Src    : alice
+    Src    : charlie
     Dest   : bob
     Kind   : Ack
   - Action : delay # Every Lookup message in the system will be delayed
     Kind   : delay
   - Action : duplicate      # 3rd message from alice that anyone 
     Src    : alice        # receives will be duplicated
-    Kind   : dup
+    Kind   : dupli
 
 ReceiveRules :
   - Action : duplicate      # 3rd message from Charlie that anyone 
@@ -43,7 +53,7 @@ ReceiveRules :
 
 
 ClockType :
-  - Type  : VectorClock
+  - Type  : LogicalClock
 
 Groups :
   - Name : Group1

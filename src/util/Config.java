@@ -18,7 +18,8 @@ public class Config {
         for (Map<String, Object> yamlNode : element) {
             try {
                 String name = yamlNode.get("Name").toString();
-                userMap.put(name, new Node(name, yamlNode.get("IP").toString(), (Integer)yamlNode.get("Port")));
+                ArrayList<String> memberOf = (ArrayList<String>) yamlNode.get("memberOf");
+                userMap.put(name, new Node(name, yamlNode.get("IP").toString(), (Integer)yamlNode.get("Port"), memberOf));
             } catch (Exception e) {
                 System.err.println("ERROR: configuration file error - " + yamlNode);
                 e.printStackTrace();

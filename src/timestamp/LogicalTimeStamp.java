@@ -36,4 +36,11 @@ public class LogicalTimeStamp extends TimeStamp implements Serializable {
 		return String.valueOf(logicalTS);
 	}
 
+	@Override
+	public TimeStamp clone() {
+		LogicalTimeStamp cloned = new LogicalTimeStamp();
+		cloned.logicalTS = this.logicalTS;
+		return cloned;
+	}
+
 }
