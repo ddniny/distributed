@@ -79,6 +79,12 @@ public class Mutex {
 	public void requstHandle(Message mtxMsg) throws IOException {
 		if (state.toString().equals("HELD") || vote) {
 			//queue request from pi without replying
+			for (int i = 0; i < requests.size(); i++) { //Don't queue this message if it has already been received
+				if (requests.get(i).get_seqNumr() == mtxMsg.get_seqNumr()) {
+					return;
+				}
+			}
+			if (requests.isEmpty()) requests.add((TimeStampedMessage) mtxMsg);
 			for (int i = 0; i < requests.size(); i++) {
 				if (requests.get(i).getTimeStamp().compareTo(((TimeStampedMessage) mtxMsg).getTimeStamp()) > 0) {
 					requests.add(i, (TimeStampedMessage) mtxMsg);
@@ -110,6 +116,8 @@ public class Mutex {
 			rlsMsg.setDest(group);
 			passer.multicastService.bMulticast(group, rlsMsg);
 		}
+		
+		releaseHandle();
 
 	}
 
