@@ -80,16 +80,23 @@ public class Mutex {
 		if (state.toString().equals("HELD") || vote) {
 			//queue request from pi without replying
 			for (int i = 0; i < requests.size(); i++) { //Don't queue this message if it has already been received
-				if (requests.get(i).get_seqNumr() == mtxMsg.get_seqNumr()) {
+				if (requests.get(i).get_seqNumr() == mtxMsg.get_seqNumr() && requests.get(i).get_source().equals(mtxMsg.get_source())) {
 					return;
 				}
 			}
-			if (requests.isEmpty()) requests.add((TimeStampedMessage) mtxMsg);
-			for (int i = 0; i < requests.size(); i++) {
-				if (requests.get(i).getTimeStamp().compareTo(((TimeStampedMessage) mtxMsg).getTimeStamp()) > 0) {
-					requests.add(i, (TimeStampedMessage) mtxMsg);
+//			if (requests.isEmpty()) {
+//				requests.add((TimeStampedMessage) mtxMsg);
+//			}
+//			else {
+			int i = 0;
+				for (; i < requests.size(); i++) {
+					if (requests.get(i).getTimeStamp().compareTo(((TimeStampedMessage) mtxMsg).getTimeStamp()) > 0) {
+						requests.add(i, (TimeStampedMessage) mtxMsg);
+						break;
+					}
 				}
-			}
+				if (i == requests.size()) requests.add(i, (TimeStampedMessage) mtxMsg);
+			//}
 		} else { //send reply to pi; voted := TRUE;
 			TimeStampedMessage reply = new TimeStampedMessage(mtxMsg.get_source(), "mutexReply", null, passer.clock.getcurrentTimeStamp().clone());
 			reply.set_source(passer.localName);
@@ -116,7 +123,7 @@ public class Mutex {
 			rlsMsg.setDest(group);
 			passer.multicastService.bMulticast(group, rlsMsg);
 		}
-		
+
 		releaseHandle();
 
 	}
@@ -144,7 +151,7 @@ public class Mutex {
 		if (voteGet.size() == groupMember.size()) {
 			state = State.HELD;
 		}
-		
+
 	}
 
 
