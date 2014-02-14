@@ -60,7 +60,7 @@ public class PairListenThread extends Thread {
 				Mutex.getInstance().requstHandle(message);
 			} else if (message.getKind().equals("releaseRequest")) {
 				passer.clock.updateTimeStamp(message.getTimeStamp());
-				Mutex.getInstance().releaseHandle();;
+				Mutex.getInstance().releaseHandle(message);;
 			} else if (message.getKind().equals("mutexReply")) {
 				passer.clock.updateTimeStamp(message.getTimeStamp());
 				Mutex.getInstance().voteHandle(message);

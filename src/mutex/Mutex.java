@@ -20,6 +20,7 @@ public class Mutex {
 	private ArrayList<TimeStampedMessage> requests;
 	private Set<String> groupMember;
 	private Set<String> voteGet;
+	private TimeStampedMessage preReleasedMessage;
 
 	public Mutex() {
 		this.state = State.RELEASED;
@@ -124,7 +125,7 @@ public class Mutex {
 			passer.multicastService.bMulticast(group, rlsMsg);
 		}
 
-		releaseHandle();
+		releaseHandle(rlsMsg);
 
 	}
 
@@ -132,7 +133,13 @@ public class Mutex {
 	 * Handle the release message from other process
 	 * @throws IOException 
 	 */
-	public void releaseHandle() throws IOException {
+	public void releaseHandle(TimeStampedMessage message) throws IOException {
+		//if the released message has already received then drop it
+		if (preReleasedMessage != null) {
+			if (preReleasedMessage.get_seqNumr() == message.get_seqNumr() && preReleasedMessage.get_source().equals(message.get_source()))
+				return;
+		}
+		preReleasedMessage = message;
 		if (!requests.isEmpty()) {
 			TimeStampedMessage next = requests.remove(0);
 			vote = false;
