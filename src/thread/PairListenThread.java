@@ -56,13 +56,13 @@ public class PairListenThread extends Thread {
 			message.set_rcvDuplicate(true);
 		default:
 			if (message.getKind().equals("mutexRequest")) {
-				passer.clock.updateTimeStamp();
+				passer.clock.updateTimeStamp(message.getTimeStamp());
 				Mutex.getInstance().requstHandle(message);
 			} else if (message.getKind().equals("releaseRequest")) {
-				passer.clock.updateTimeStamp();
+				passer.clock.updateTimeStamp(message.getTimeStamp());
 				Mutex.getInstance().releaseHandle();;
 			} else if (message.getKind().equals("mutexReply")) {
-				passer.clock.updateTimeStamp();
+				passer.clock.updateTimeStamp(message.getTimeStamp());
 				Mutex.getInstance().voteHandle(message);
 			} else {
 				receiveIn(message, passer);       
