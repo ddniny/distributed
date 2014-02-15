@@ -109,7 +109,6 @@ public class MessagePasser {
 			rcvRules = Config.parseRules(map.get("ReceiveRules"));
 			CLOCKTYPE = Config.parseClockType(map.get("ClockType"));
 			groups = Config.parseGroupsHashMap(map.get("Groups"));
-
 		} catch (FileNotFoundException e) {
 			System.err.println("ERROR: Cannot find the configuration file!");
 			e.printStackTrace();

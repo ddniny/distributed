@@ -30,15 +30,28 @@ public class Mutex {
 		voteGet = new HashSet<String>();
 		groupMember = new HashSet<String>();
 
-		// Add all of the other members in the group that this node in to a HashSet groupMember
+		// Add all of the other members in the group[i] that this node in to a HashSet groupMember
 		ArrayList<String> groupIn = passer.myself.getMemberOf();
+		
 		for (String group : groupIn) {
+			Integer index = passer.getNodeIndex(passer.localName);
+			if (group.contains(index.toString())) {
+				for (String m: passer.groups.get(group)) {
+					if (!m.equals(passer.localName)) {
+						groupMember.add(m);	
+					}
+				}
+			}
+		}
+		
+		
+		/*for (String group : groupIn) {
 			for (String m: passer.groups.get(group)) {
 				if (!m.equals(passer.localName)) {
 					groupMember.add(m);
 				}
 			}
-		}
+		}*/
 	}
 
 	public static Mutex getInstance() {
@@ -63,8 +76,11 @@ public class Mutex {
 		mtxMsg.set_source(passer.localName);
 		mtxMsg.set_seqNum(passer.IDcounter.incrementAndGet());
 		for (String group : groups) {
-			mtxMsg.setDest(group);
-			passer.multicastService.bMulticast(group, mtxMsg);
+			Integer index = passer.getNodeIndex(passer.localName);
+			if (group.contains(index.toString())) {
+				mtxMsg.setDest(group);
+				passer.multicastService.bMulticast(group, mtxMsg);
+			}
 		}
 		//Wait until (number of replies received = K)
 		while (!state.toString().equals("HELD")) {
