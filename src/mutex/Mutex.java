@@ -37,9 +37,9 @@ public class Mutex {
 			Integer index = passer.getNodeIndex(passer.localName);
 			if (group.contains(index.toString())) {
 				for (String m: passer.groups.get(group)) {
-					if (!m.equals(passer.localName)) {
-						groupMember.add(m);	
-					}
+					//if (!m.equals(passer.localName)) {
+					groupMember.add(m);	
+					//}
 				}
 			}
 		}
@@ -137,9 +137,16 @@ public class Mutex {
 		rlsMsg.set_source(passer.localName);
 		rlsMsg.set_seqNum(passer.IDcounter.incrementAndGet());
 		for (String group : groups) {
+			Integer index = passer.getNodeIndex(passer.localName);
+			if (group.contains(index.toString())) {
+				rlsMsg.setDest(group);
+				passer.multicastService.bMulticast(group, rlsMsg);
+			}
+		}
+		/*for (String group : groups) {
 			rlsMsg.setDest(group);
 			passer.multicastService.bMulticast(group, rlsMsg);
-		}
+		}*/
 
 		releaseHandle(rlsMsg);
 

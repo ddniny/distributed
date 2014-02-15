@@ -99,9 +99,9 @@ public class PairListenThread extends Thread {
 	 */
 	private static ACTION matchReceiveRule(Message message, MessagePasser passer) throws IOException {
 		passer.checkModified();
-		if (message.get_source().equals(passer.localName) && (message.getKind().equals("mutexRequest") || message.getKind().equals("releaseRequest"))) {
+		/*if (message.get_source().equals(passer.localName) && (message.getKind().equals("mutexRequest") || message.getKind().equals("releaseRequest"))) {
 			return ACTION.DROP;
-		}
+		}*/
 		for (Rule rule : passer.rcvRules){
 			if (rule.isMatch(message)) {
 				return rule.getAction();
