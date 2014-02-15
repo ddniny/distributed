@@ -389,6 +389,12 @@ public class MessagePasser {
 			processIndex = 3;
 		}else if (local_name.equalsIgnoreCase("daphnie")) {
 			processIndex = 4;
+		}else if (local_name.equalsIgnoreCase("erica")) {
+			processIndex = 5;
+		}else if (local_name.equalsIgnoreCase("fred")) {
+			processIndex = 6;
+		}else if (local_name.equalsIgnoreCase("gina")) {
+			processIndex = 7;
 		}else throw new RuntimeException("No such user.");
 	}
 
@@ -403,6 +409,12 @@ public class MessagePasser {
 			return 3;
 		}else if (nodeName.equalsIgnoreCase("daphnie")) {
 			return 4;
+		}else if (nodeName.equalsIgnoreCase("erica")) {
+			return 5;
+		}else if (nodeName.equalsIgnoreCase("fred")) {
+			return 6;
+		}else if (nodeName.equalsIgnoreCase("gina")) {
+			return 7;
 		}else throw new RuntimeException("No such user.");
 	}
 

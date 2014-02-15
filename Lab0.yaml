@@ -14,7 +14,9 @@ Configuration :
     IP   : localhost
     Port : 12345
     memberOf :
-      - Group1          # This is the incoming port on which MP will listen
+      - Group1
+      - Group4
+      - Group6	        # This is the incoming port on which MP will listen
                         # May be changed for further communication as usual
   - Name : bob 
     IP   : localhost
@@ -22,19 +24,47 @@ Configuration :
     memberOf :
       - Group1
       - Group2
+      - Group5
     
   - Name : charlie
     IP   : localhost
     Port : 12998
     memberOf :
       - Group1
-      - Group2
+      - Group3
+      - Group7
     
   - Name : daphnie
     IP   : localhost
     Port : 1987
     memberOf :
       - Group2
+      - Group4
+      - Group7
+
+  - Name : erica
+    IP   : localhost
+    Port : 22222
+    memberOf :
+      - Group3
+      - Group4
+      - Group5
+
+  - Name : fred
+    IP   : localhost
+    Port : 22444
+    memberOf :
+      - Group2
+      - Group3
+      - Group6
+
+  - Name : gina
+    IP   : localhost
+    Port : 22666
+    memberOf :
+      - Group5
+      - Group6
+      - Group7
 
 SendRules :
   - Action : drop # Ack message number 4 from bob to alice will not be sent
@@ -62,10 +92,38 @@ Groups :
         - bob
         - charlie
      
-      
   - Name : Group2
     Members:
-        - daphnie
         - bob
-        - charlie
+        - daphnie
+        - fred
 
+  - Name : Group3
+    Members:
+        - charlie
+        - erica
+        - fred
+
+  - Name : Group4
+    Members:
+        - alice
+        - daphnie
+        - erica
+
+  - Name : Group5
+    Members:
+        - bob
+        - erica
+        - gina
+
+  - Name : Group6
+    Members:
+        - alice
+        - fred
+        - gina
+
+  - Name : Group7
+    Members:
+        - charlie
+        - daphnie
+        - gina
