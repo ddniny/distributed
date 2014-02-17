@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import multicast.MulticastService;
+import mutex.Mutex;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -183,6 +184,9 @@ public class MessagePasser {
 			// no break, because at least one message should be sent
 			dupToLog = currentToLogger;
 			duplicate = true;
+			if (message.getKind().equals("mutexRequest") || message.getKind().equals("releaseRequest") ||message.getKind().equals("mutexReply")) {
+				duplicate = false;
+			}
 		default:
 			sendAway(message);  
 			sendAwayToLogger(message, "Send");
