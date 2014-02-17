@@ -176,6 +176,7 @@ public class MessagePasser {
 			break;
 		case DELAY:
 			sendAwayToLogger(message, "Sender Delay");
+			System.out.println("INFO: Delay Message (Send) " + message);
 			delayOutMsgQueue.add(message);
 			break;
 		case DUPLICATE:
@@ -191,11 +192,11 @@ public class MessagePasser {
 				for (int i = 0; i < size; i++) {
 					//TimeStampedMessage msg = delayOutMsgQueue.poll();
 					TimeStampedMessage msg = delayOutMsgQueue.poll();
-					if (message.get_seqNumr() == msg.get_seqNumr()) {
-						delayOutMsgQueue.add(msg);
-					} else {
+					//if (message.get_seqNumr() == msg.get_seqNumr()) {
+					//	delayOutMsgQueue.add(msg);
+					//} else {
 						sendAway(msg);
-					}
+					//}
 				}
 			}
 			// send duplicated message if needed
