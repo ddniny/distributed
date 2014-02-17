@@ -30,7 +30,7 @@ public class UserThread extends Thread {
 
 			while (true) {
 				// wait user input
-				System.out.println("Please enter your scenario \t 1: Send, 2: Receive, 3: Retrieve, 4: Request Mutex");
+				System.out.println("Please enter your scenario \t 1: Send, 2: Receive, 3: Retrieve, 4: Request Mutex, 5: Print Statistics");
 				in = new BufferedReader(new InputStreamReader(System.in));
 				String cmdInput = in.readLine();
 				// handle with "send"
@@ -124,6 +124,13 @@ public class UserThread extends Thread {
 							break;
 						}
 					}	
+				} else if (cmdInput.equals("5")) {
+					System.out.println("Request Send Number: " + Mutex.getInstance().reqSendNum);
+					System.out.println("Request Rceive Number: " + Mutex.getInstance().reqRcvNum);
+					System.out.println("Release Send Number: " + Mutex.getInstance().rlsSendNum);
+					System.out.println("Release Rceive Number: " + Mutex.getInstance().rlsRcvNum);
+					System.out.println("Vote Send Number: " + Mutex.getInstance().vtSendNum);
+					System.out.println("Vote Rceive Number: " + Mutex.getInstance().vtRcvNum);
 				}
 			}
 		} catch (Exception e) {
