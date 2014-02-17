@@ -20,8 +20,7 @@ public class Mutex {
 	private ArrayList<TimeStampedMessage> requests;
 	private Set<String> groupMember;
 	private Set<String> voteGet;
-	private TimeStampedMessage preReleasedMessage, preRequestMessage;
-	public int reqRcvNum, reqSendNum, rlsRcvNum, rlsSendNum, vtRcvNum, vtSendNum;
+	private TimeStampedMessage preReleasedMessage;
 
 	public Mutex() {
 		this.state = State.RELEASED;
@@ -30,15 +29,10 @@ public class Mutex {
 		requests = new ArrayList<TimeStampedMessage>();
 		voteGet = new HashSet<String>();
 		groupMember = new HashSet<String>();
-		reqRcvNum = 0;
-		reqSendNum = 0;
-		rlsRcvNum = 0;
-		rlsSendNum = 0;
-		vtRcvNum = 0;
-		vtSendNum = 0;
+
 		// Add all of the other members in the group[i] that this node in to a HashSet groupMember
 		ArrayList<String> groupIn = passer.myself.getMemberOf();
-
+		
 		for (String group : groupIn) {
 			Integer index = passer.getNodeIndex(passer.localName);
 			if (group.contains(index.toString())) {
@@ -49,8 +43,8 @@ public class Mutex {
 				}
 			}
 		}
-
-
+		
+		
 		/*for (String group : groupIn) {
 			for (String m: passer.groups.get(group)) {
 				if (!m.equals(passer.localName)) {
@@ -73,7 +67,6 @@ public class Mutex {
 	 * @throws IOException 
 	 */
 	public void request() throws IOException, CloneNotSupportedException {
-		reqSendNum ++;
 		//state := WANTED;
 		state = State.WANTED;
 		voteGet.clear();
@@ -84,7 +77,7 @@ public class Mutex {
 		mtxMsg.set_seqNum(passer.IDcounter.incrementAndGet());
 		for (String group : groups) {
 			Integer index = passer.getNodeIndex(passer.localName);
-			if (group.contains(index.toString())) {  //Only send to specific group
+			if (group.contains(index.toString())) {
 				mtxMsg.setDest(group);
 				passer.multicastService.bMulticast(group, mtxMsg);
 			}
@@ -101,12 +94,6 @@ public class Mutex {
 	 * @throws IOException 
 	 */
 	public void requstHandle(Message mtxMsg) throws IOException {
-		reqRcvNum++;
-		if (preRequestMessage != null) { //in case duplicate
-			if (preRequestMessage.get_seqNumr() == mtxMsg.get_seqNumr() && preRequestMessage.get_source().equals(mtxMsg.get_source()))
-				return;
-		}
-		preRequestMessage = (TimeStampedMessage) mtxMsg;
 		if (state.toString().equals("HELD") || vote) {
 			//queue request from pi without replying
 			for (int i = 0; i < requests.size(); i++) { //Don't queue this message if it has already been received
@@ -114,24 +101,23 @@ public class Mutex {
 					return;
 				}
 			}
-			//			if (requests.isEmpty()) {
-			//				requests.add((TimeStampedMessage) mtxMsg);
-			//			}
-			//			else {
+//			if (requests.isEmpty()) {
+//				requests.add((TimeStampedMessage) mtxMsg);
+//			}
+//			else {
 			int i = 0;
-			for (; i < requests.size(); i++) {
-				if (requests.get(i).getTimeStamp().compareTo(((TimeStampedMessage) mtxMsg).getTimeStamp()) > 0) {
-					requests.add(i, (TimeStampedMessage) mtxMsg);
-					break;
+				for (; i < requests.size(); i++) {
+					if (requests.get(i).getTimeStamp().compareTo(((TimeStampedMessage) mtxMsg).getTimeStamp()) > 0) {
+						requests.add(i, (TimeStampedMessage) mtxMsg);
+						break;
+					}
 				}
-			}
-			if (i == requests.size()) requests.add(i, (TimeStampedMessage) mtxMsg);
+				if (i == requests.size()) requests.add(i, (TimeStampedMessage) mtxMsg);
 			//}
 		} else { //send reply to pi; voted := TRUE;
 			TimeStampedMessage reply = new TimeStampedMessage(mtxMsg.get_source(), "mutexReply", null, passer.clock.getcurrentTimeStamp().clone());
 			reply.set_source(passer.localName);
 			reply.set_seqNum(passer.IDcounter.incrementAndGet());
-			vtSendNum++;
 			passer.send(reply);
 			vote = true;
 		}
@@ -143,7 +129,6 @@ public class Mutex {
 	 * @throws IOException 
 	 */
 	public void release() throws IOException, CloneNotSupportedException {
-		rlsSendNum++;
 		//state := RELEASED;
 		state = State.RELEASED;
 		//Multicast release message to all processes in Vi;
@@ -163,7 +148,7 @@ public class Mutex {
 			passer.multicastService.bMulticast(group, rlsMsg);
 		}*/
 
-		//releaseHandle(rlsMsg);
+		releaseHandle(rlsMsg);
 
 	}
 
@@ -172,7 +157,6 @@ public class Mutex {
 	 * @throws IOException 
 	 */
 	public void releaseHandle(TimeStampedMessage message) throws IOException {
-		rlsRcvNum++;
 		//if the released message has already received then drop it
 		if (preReleasedMessage != null) {
 			if (preReleasedMessage.get_seqNumr() == message.get_seqNumr() && preReleasedMessage.get_source().equals(message.get_source()))
@@ -182,7 +166,6 @@ public class Mutex {
 		if (!requests.isEmpty()) {
 			TimeStampedMessage next = requests.remove(0);
 			vote = false;
-			reqRcvNum--;
 			requstHandle(next);
 			vote = true;
 		} else {
@@ -194,7 +177,6 @@ public class Mutex {
 	 * Handle the vote this process get
 	 */
 	public void voteHandle(TimeStampedMessage voteMsg) {
-		vtRcvNum++;
 		voteGet.add(voteMsg.get_source());
 		if (voteGet.size() == groupMember.size()) {
 			state = State.HELD;

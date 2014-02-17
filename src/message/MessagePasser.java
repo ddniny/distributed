@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import multicast.MulticastService;
-import mutex.Mutex;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -177,16 +176,12 @@ public class MessagePasser {
 			break;
 		case DELAY:
 			sendAwayToLogger(message, "Sender Delay");
-			System.out.println("INFO: Delay Message (Send) " + message);
 			delayOutMsgQueue.add(message);
 			break;
 		case DUPLICATE:
 			// no break, because at least one message should be sent
 			dupToLog = currentToLogger;
 			duplicate = true;
-			if (message.getKind().equals("mutexRequest") || message.getKind().equals("releaseRequest") ||message.getKind().equals("mutexReply")) {
-				duplicate = false;
-			}
 		default:
 			sendAway(message);  
 			sendAwayToLogger(message, "Send");
@@ -196,11 +191,11 @@ public class MessagePasser {
 				for (int i = 0; i < size; i++) {
 					//TimeStampedMessage msg = delayOutMsgQueue.poll();
 					TimeStampedMessage msg = delayOutMsgQueue.poll();
-					//if (message.get_seqNumr() == msg.get_seqNumr()) {
-					//	delayOutMsgQueue.add(msg);
-					//} else {
+					if (message.get_seqNumr() == msg.get_seqNumr()) {
+						delayOutMsgQueue.add(msg);
+					} else {
 						sendAway(msg);
-					//}
+					}
 				}
 			}
 			// send duplicated message if needed
