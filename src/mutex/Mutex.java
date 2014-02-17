@@ -20,7 +20,7 @@ public class Mutex {
 	private ArrayList<TimeStampedMessage> requests;
 	private Set<String> groupMember;
 	private Set<String> voteGet;
-	private TimeStampedMessage preReleasedMessage;
+	private TimeStampedMessage preReleasedMessage, preRequestMessage;
 	public int reqRcvNum, reqSendNum, rlsRcvNum, rlsSendNum, vtRcvNum, vtSendNum;
 
 	public Mutex() {
@@ -38,7 +38,7 @@ public class Mutex {
 		vtSendNum = 0;
 		// Add all of the other members in the group[i] that this node in to a HashSet groupMember
 		ArrayList<String> groupIn = passer.myself.getMemberOf();
-		
+
 		for (String group : groupIn) {
 			Integer index = passer.getNodeIndex(passer.localName);
 			if (group.contains(index.toString())) {
@@ -49,8 +49,8 @@ public class Mutex {
 				}
 			}
 		}
-		
-		
+
+
 		/*for (String group : groupIn) {
 			for (String m: passer.groups.get(group)) {
 				if (!m.equals(passer.localName)) {
@@ -102,6 +102,11 @@ public class Mutex {
 	 */
 	public void requstHandle(Message mtxMsg) throws IOException {
 		reqRcvNum++;
+		if (preRequestMessage != null) { //in case duplicate
+			if (preRequestMessage.get_seqNumr() == mtxMsg.get_seqNumr() && preRequestMessage.get_source().equals(mtxMsg.get_source()))
+				return;
+		}
+		preRequestMessage = (TimeStampedMessage) mtxMsg;
 		if (state.toString().equals("HELD") || vote) {
 			//queue request from pi without replying
 			for (int i = 0; i < requests.size(); i++) { //Don't queue this message if it has already been received
@@ -109,18 +114,18 @@ public class Mutex {
 					return;
 				}
 			}
-//			if (requests.isEmpty()) {
-//				requests.add((TimeStampedMessage) mtxMsg);
-//			}
-//			else {
+			//			if (requests.isEmpty()) {
+			//				requests.add((TimeStampedMessage) mtxMsg);
+			//			}
+			//			else {
 			int i = 0;
-				for (; i < requests.size(); i++) {
-					if (requests.get(i).getTimeStamp().compareTo(((TimeStampedMessage) mtxMsg).getTimeStamp()) > 0) {
-						requests.add(i, (TimeStampedMessage) mtxMsg);
-						break;
-					}
+			for (; i < requests.size(); i++) {
+				if (requests.get(i).getTimeStamp().compareTo(((TimeStampedMessage) mtxMsg).getTimeStamp()) > 0) {
+					requests.add(i, (TimeStampedMessage) mtxMsg);
+					break;
 				}
-				if (i == requests.size()) requests.add(i, (TimeStampedMessage) mtxMsg);
+			}
+			if (i == requests.size()) requests.add(i, (TimeStampedMessage) mtxMsg);
 			//}
 		} else { //send reply to pi; voted := TRUE;
 			TimeStampedMessage reply = new TimeStampedMessage(mtxMsg.get_source(), "mutexReply", null, passer.clock.getcurrentTimeStamp().clone());
