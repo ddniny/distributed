@@ -77,11 +77,7 @@ SendRules :
     Src    : alice        # receives will be duplicated
     Src    : alice        # receives will be duplicated
     Kind   : dupli
-#  - Action : delay
-#    Kind   : mutexRequest
-#    Src    : bob
-#    Dest   : fred
-
+	
 ReceiveRules :
   - Action : duplicate      # 3rd message from Charlie that anyone 
     Kind   : dup
