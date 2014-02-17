@@ -74,6 +74,7 @@ public class MulticastService{
 
 	public void bDeliver(String groupName, TimeStampedMessage message) throws IOException, CloneNotSupportedException {
 		synchronized (receivedMessages) {
+			System.out.println("ALMOST ALMOST REMULTICASTING");
 			if (receivedMessages != null) {
 				for (TimeStampedMessage tsMsg : receivedMessages) {
 					if(tsMsg.get_source().equals(message.get_source()) && tsMsg.get_seqNumr() == message.get_seqNumr() && (tsMsg.get_sendDuplicate() == message.get_sendDuplicate())){
@@ -83,11 +84,13 @@ public class MulticastService{
 			}
 			receivedMessages.add(message);
 			synchronized (holdbackQueue) {
+				System.out.println("ALMOST REMULTICASTING");
 				if (!message.get_source().equals(mp.localName)) {
 					holdbackQueue.add(message);
 					TimeStampedMessage newMessage = message.clone();
 					newMessage.setMedium(mp.myself.getName());
 					bMulticast(groupName, newMessage);
+					System.out.println("REMULTICASTING");
 				}
 			}
 		}
