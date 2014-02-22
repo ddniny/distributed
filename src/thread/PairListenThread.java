@@ -55,21 +55,28 @@ public class PairListenThread extends Thread {
 			// no break, because at least one message should be received
 			message.set_rcvDuplicate(true);
 		default:
-			if (message.getKind().equals("mutexRequest")) {
-				passer.clock.updateTimeStamp(message.getTimeStamp());
-				Mutex.getInstance().requstHandle(message);
-			} else if (message.getKind().equals("releaseRequest")) {
-				passer.clock.updateTimeStamp(message.getTimeStamp());
-				Mutex.getInstance().releaseHandle(message);;
-			} else if (message.getKind().equals("mutexReply")) {
-				passer.clock.updateTimeStamp(message.getTimeStamp());
-				Mutex.getInstance().voteHandle(message);
-			} else {
+			//			if (message.getKind().equals("mutexRequest")) {
+			//				passer.clock.updateTimeStamp(message.getTimeStamp());
+			//				Mutex.getInstance().requstHandle(message);
+			//			} else if (message.getKind().equals("releaseRequest")) {
+			//				passer.clock.updateTimeStamp(message.getTimeStamp());
+			//				Mutex.getInstance().releaseHandle(message);;
+			//			} else if (message.getKind().equals("mutexReply")) {
+			//				passer.clock.updateTimeStamp(message.getTimeStamp());
+			//				Mutex.getInstance().voteHandle(message);
+			//			} else {
+			if (!mutexMsg(message, passer)) {
 				receiveIn(message, passer);       
 				// receive delayed message
 				synchronized(passer.delayInMsgQueue) {
 					while (!passer.delayInMsgQueue.isEmpty()) {
-						receiveIn(passer.delayInMsgQueue.poll(), passer);
+						//receiveIn(passer.delayInMsgQueue.poll(), passer);
+						TimeStampedMessage msg = passer.delayInMsgQueue.poll();
+						if (msg.getKind().equals("mutexRequest") || msg.getKind().equals("releaseRequest") || msg.getKind().equals("mutexReply")) {
+							mutexMsg(msg, passer);
+						} else {
+							receiveIn(msg, passer);
+						}
 					}
 				}
 
@@ -79,6 +86,23 @@ public class PairListenThread extends Thread {
 				}
 			}
 		} 
+	}
+
+	public static boolean mutexMsg(TimeStampedMessage message, MessagePasser passer) throws IOException {
+		if (message.getKind().equals("mutexRequest")) {
+			passer.clock.updateTimeStamp(message.getTimeStamp());
+			Mutex.getInstance().requstHandle(message);
+			return true;
+		} else if (message.getKind().equals("releaseRequest")) {
+			passer.clock.updateTimeStamp(message.getTimeStamp());
+			Mutex.getInstance().releaseHandle(message);
+			return true;
+		} else if (message.getKind().equals("mutexReply")) {
+			passer.clock.updateTimeStamp(message.getTimeStamp());
+			Mutex.getInstance().voteHandle(message);
+			return true;
+		}
+		return false;
 	}
 
 	/**
